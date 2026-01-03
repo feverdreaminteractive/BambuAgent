@@ -10,7 +10,7 @@ class APIService {
     var errorMessage: String?
 
     // MARK: - Private Properties
-    private let session = URLSession.shared
+    private let session: URLSession
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
@@ -20,6 +20,12 @@ class APIService {
 
     // MARK: - Initialization
     init() {
+        // Configure URLSession with proper timeouts
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 10.0  // 10 seconds request timeout
+        configuration.timeoutIntervalForResource = 30.0 // 30 seconds resource timeout
+        session = URLSession(configuration: configuration)
+
         #if DEBUG
         serverURL = URL(string: Self.developmentURL)!
         #else
@@ -55,7 +61,11 @@ class APIService {
     private func testConnection() async -> Bool {
         do {
             let url = serverURL.appendingPathComponent("/")
-            let (_, response) = try await session.data(from: url)
+
+            // Add timeout to prevent long hangs
+            let (_, response) = try await withTimeout(seconds: 8) {
+                try await session.data(from: url)
+            }
 
             if let httpResponse = response as? HTTPURLResponse {
                 return httpResponse.statusCode == 200
@@ -67,6 +77,24 @@ class APIService {
                 errorMessage = "Connection failed: \(error.localizedDescription)"
             }
             return false
+        }
+    }
+
+    // Helper function to add timeout to async operations
+    private func withTimeout<T>(seconds: Double, operation: @escaping () async throws -> T) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                try await operation()
+            }
+
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw URLError(.timedOut)
+            }
+
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
         }
     }
 

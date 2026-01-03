@@ -119,7 +119,7 @@ struct SettingsView: View {
                                 .font(.caption)
                         }
                     } else {
-                        Label("No Printer Connected", systemImage: "printer.slash")
+                        Label("No Printer Connected", systemImage: "printer")
                             .foregroundColor(.secondary)
                     }
 
