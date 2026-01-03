@@ -5,7 +5,7 @@ import Foundation
 class APIService {
     // MARK: - Published Properties
     var isConnected: Bool = false
-    var serverURL: URL = URL(string: "http://192.168.86.177:8000")! // Use Mac's IP for iOS Simulator
+    var serverURL: URL
     var isGenerating: Bool = false
     var errorMessage: String?
 
@@ -14,8 +14,21 @@ class APIService {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
+    // MARK: - Environment Configuration
+    private static let productionURL = "https://bambuagent-backend-production.up.railway.app"
+    private static let developmentURL = "http://192.168.86.177:8000"
+
+    private var defaultURL: URL {
+        #if DEBUG
+        return URL(string: Self.developmentURL)!
+        #else
+        return URL(string: Self.productionURL)!
+        #endif
+    }
+
     // MARK: - Initialization
     init() {
+        serverURL = defaultURL
         loadServerURL()
         Task { @MainActor in
             checkServerConnection()
@@ -210,6 +223,8 @@ class APIService {
         if let urlString = UserDefaults.standard.string(forKey: "ServerURL"),
            let url = URL(string: urlString) {
             serverURL = url
+        } else {
+            serverURL = defaultURL
         }
     }
 }

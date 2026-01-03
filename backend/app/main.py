@@ -5,6 +5,19 @@ import os
 import logging
 from typing import Dict, Any, Optional
 import asyncio
+from pathlib import Path
+
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    env_file = Path(__file__).parent.parent / f".env.{os.getenv('ENVIRONMENT', 'development')}"
+    if env_file.exists():
+        load_dotenv(env_file)
+    else:
+        # Fallback to .env
+        load_dotenv(Path(__file__).parent.parent / ".env")
+except ImportError:
+    pass
 
 from .services.claude_service import ClaudeService
 from .services.openscad_service import OpenSCADService
