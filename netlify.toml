@@ -1,6 +1,12 @@
 [build]
+  base = ""
   publish = "web"
   command = "echo 'Static site ready'"
+  ignore = "exit 0"
+
+[build.environment]
+  NODE_VERSION = "18"
+  DISABLE_DEPENDENCY_INSTALL = "true"
 
 [[headers]]
   for = "/*"
