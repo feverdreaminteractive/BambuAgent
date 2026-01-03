@@ -140,9 +140,9 @@ async def generate_model(request: GenerateRequest, x_api_key: str = Header(None)
         result = await claude_service.generate_openscad(request.prompt, x_api_key)
 
         return GenerateResponse(
-            openscad_code=result["code"],
+            openscad_code=result["openscadCode"],
             explanation=result["explanation"],
-            estimated_print_time=result.get("estimated_print_time")
+            estimated_print_time=result.get("estimatedPrintTime")
         )
 
     except Exception as e:
@@ -298,7 +298,7 @@ async def full_pipeline(request: GenerateRequest, background_tasks: BackgroundTa
 
         # Compile to STL
         stl_path = await openscad_service.compile_to_stl(
-            generate_result["code"],
+            generate_result["openscadCode"],
             "pipeline_model"
         )
 
@@ -317,7 +317,7 @@ async def full_pipeline(request: GenerateRequest, background_tasks: BackgroundTa
         return {
             "job_id": job_id,
             "message": "Full pipeline completed successfully",
-            "openscad_code": generate_result["code"],
+            "openscad_code": generate_result["openscadCode"],
             "stl_path": stl_path,
             "gcode_path": slice_result["gcode_path"],
             "estimated_print_time": slice_result.get("print_time")
