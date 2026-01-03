@@ -1,5 +1,8 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import os
 import logging
@@ -34,14 +37,24 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware for iOS app
+# CORS middleware for iOS app and web interface
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict to your iOS app
+    allow_origins=["*"],  # In production, restrict to your iOS app and domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files and templates
+web_dir = Path(__file__).parent.parent.parent / "web"
+templates = None
+
+if web_dir.exists() and (web_dir / "static").exists():
+    app.mount("/static", StaticFiles(directory=str(web_dir / "static")), name="static")
+
+if web_dir.exists() and (web_dir / "templates").exists():
+    templates = Jinja2Templates(directory=str(web_dir / "templates"))
 
 # Initialize services
 claude_service = ClaudeService()
@@ -98,8 +111,17 @@ class PrinterStatusResponse(BaseModel):
     progress: Optional[float] = None
 
 @app.get("/")
-async def root():
-    """Health check endpoint"""
+async def root(request: Request):
+    """Serve the web interface or API response"""
+    if templates:
+        return templates.TemplateResponse("index.html", {"request": request})
+    else:
+        # Fallback API response if web interface not available
+        return {"message": "BambuAgent API is running", "status": "healthy"}
+
+@app.get("/api")
+async def api_root():
+    """API health check endpoint"""
     return {"message": "BambuAgent API is running", "status": "healthy"}
 
 @app.post("/generate", response_model=GenerateResponse)
