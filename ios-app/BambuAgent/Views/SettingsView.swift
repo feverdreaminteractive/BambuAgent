@@ -34,10 +34,22 @@ struct SettingsView: View {
                             .font(.caption)
                     }
 
-                    Button("Test Connection") {
-                        apiService.checkServerConnection()
+                    HStack {
+                        Button("Test Connection") {
+                            apiService.checkServerConnection()
+                        }
+
+                        Spacer()
+
+                        Button("Force Reconnect") {
+                            Task {
+                                // Clear connection status and retry
+                                await apiService.updateServerURL(apiService.serverURL.absoluteString)
+                            }
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundColor(.bambuPrimary)
                     }
-                    .disabled(apiService.isConnected)
                 }
 
                 // WiFi Information
@@ -65,12 +77,23 @@ struct SettingsView: View {
                             .font(.caption)
                     }
 
-                    Button("Scan Networks") {
-                        Task {
-                            await wifiManager.scanForNetworks()
+                    HStack {
+                        Button("Scan Networks") {
+                            Task {
+                                await wifiManager.scanForNetworks()
+                            }
                         }
+                        .disabled(wifiManager.isScanning)
+
+                        Spacer()
+
+                        Button("Refresh WiFi") {
+                            // Force refresh of current network status
+                            wifiManager.refreshConnection()
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundColor(.bambuPrimary)
                     }
-                    .disabled(wifiManager.isScanning)
                 }
 
                 // Printer Information

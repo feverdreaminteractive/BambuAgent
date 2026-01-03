@@ -182,6 +182,11 @@ class WiFiManager {
     }
 
     // MARK: - Network Connection
+    func refreshConnection() {
+        // Force refresh of current network status
+        getCurrentNetwork()
+    }
+
     func connectToNetwork(_ network: WiFiNetwork, password: String? = nil) async {
         await MainActor.run {
             connectionStatus = .connecting
