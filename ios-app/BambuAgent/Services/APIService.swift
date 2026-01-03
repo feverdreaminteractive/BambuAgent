@@ -5,7 +5,7 @@ import Foundation
 class APIService {
     // MARK: - Published Properties
     var isConnected: Bool = false
-    var serverURL: URL = URL(string: "http://localhost:8000")!
+    var serverURL: URL = URL(string: "http://192.168.86.177:8000")! // Use Mac's IP for iOS Simulator
     var isGenerating: Bool = false
     var errorMessage: String?
 

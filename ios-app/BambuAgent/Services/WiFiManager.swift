@@ -113,12 +113,33 @@ class WiFiManager {
     }
 
     private func discoverBambuPrinters() async -> [BambuDevice] {
+        // Temporarily disabled to prevent crashes - only discover after model generation
+        return []
+
+        // TODO: Re-enable after fixing BonjourDiscoveryDelegate multiple callback issue
+        /*
         return await withCheckedContinuation { continuation in
             let browser = NetServiceBrowser()
             var devices: [BambuDevice] = []
+            var hasResumed = false
+            let resumeLock = NSLock()
+
+            func safeResume(with result: [BambuDevice]) {
+                resumeLock.lock()
+                defer { resumeLock.unlock() }
+
+                if !hasResumed {
+                    hasResumed = true
+                    browser.stop()
+                    continuation.resume(returning: result)
+                }
+            }
+
             let delegate = BonjourDiscoveryDelegate { discoveredDevices in
+                resumeLock.lock()
                 devices = discoveredDevices
-                continuation.resume(returning: devices)
+                resumeLock.unlock()
+                safeResume(with: discoveredDevices)
             }
 
             browser.delegate = delegate
@@ -126,12 +147,10 @@ class WiFiManager {
 
             // Timeout after 5 seconds
             DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
-                browser.stop()
-                if devices.isEmpty {
-                    continuation.resume(returning: [])
-                }
+                safeResume(with: devices)
             }
         }
+        */
     }
 
     // MARK: - Current Network Info
