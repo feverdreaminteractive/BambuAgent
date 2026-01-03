@@ -602,6 +602,18 @@
 
                 resultsContent.innerHTML = `
                     <div class="bg-gray-800 rounded-lg p-4">
+                        <h4 class="font-semibold mb-2 text-purple-400">3D Preview</h4>
+                        <div id="threejs-preview" class="w-full h-64 bg-gray-900 rounded border border-gray-600 relative">
+                            <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                                <div class="text-center">
+                                    <div class="animate-spin h-8 w-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto mb-2"></div>
+                                    <div>Generating 3D Preview...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-lg p-4">
                         <h4 class="font-semibold mb-2 text-green-400">Generated OpenSCAD Code</h4>
                         <pre class="text-sm text-gray-300 overflow-x-auto bg-gray-900 p-3 rounded"><code>${this.escapeHtml(data.openscad_code)}</code></pre>
                     </div>
@@ -626,6 +638,9 @@
                 `;
 
                 resultsSection.classList.remove('hidden');
+
+                // Generate 3D preview
+                this.generate3DPreview(data.openscad_code);
             }
 
             displayFullPipelineResults(data) {
@@ -716,6 +731,219 @@
                         }
                     }, 300);
                 }, 5000);
+            }
+
+            generate3DPreview(openscadCode) {
+                try {
+                    const container = document.getElementById('threejs-preview');
+                    if (!container) return;
+
+                    // Clear the loading state
+                    container.innerHTML = '';
+
+                    // Parse OpenSCAD and create Three.js scene
+                    const shapes = this.parseOpenSCAD(openscadCode);
+                    this.renderThreeJSScene(container, shapes);
+                } catch (error) {
+                    console.error('3D Preview error:', error);
+                    const container = document.getElementById('threejs-preview');
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                                <div class="text-center">
+                                    <div class="text-red-400 mb-2">⚠️</div>
+                                    <div class="text-sm">3D Preview unavailable</div>
+                                    <div class="text-xs text-gray-500 mt-1">Complex OpenSCAD code</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            parseOpenSCAD(code) {
+                const shapes = [];
+                const lines = code.split('\n');
+
+                for (let line of lines) {
+                    line = line.trim();
+
+                    // Parse cube([x, y, z])
+                    const cubeMatch = line.match(/cube\s*\(\s*\[\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\]/);
+                    if (cubeMatch) {
+                        shapes.push({
+                            type: 'cube',
+                            size: [parseFloat(cubeMatch[1]), parseFloat(cubeMatch[2]), parseFloat(cubeMatch[3])],
+                            center: line.includes('center=true') || line.includes('center = true')
+                        });
+                        continue;
+                    }
+
+                    // Parse cube(size)
+                    const cubeSimpleMatch = line.match(/cube\s*\(\s*([0-9.]+)\s*\)/);
+                    if (cubeSimpleMatch) {
+                        const size = parseFloat(cubeSimpleMatch[1]);
+                        shapes.push({
+                            type: 'cube',
+                            size: [size, size, size],
+                            center: line.includes('center=true') || line.includes('center = true')
+                        });
+                        continue;
+                    }
+
+                    // Parse cylinder(h=height, r=radius) or cylinder(h=height, d=diameter)
+                    const cylinderMatch = line.match(/cylinder\s*\(\s*h\s*=\s*([0-9.]+).*?(?:r\s*=\s*([0-9.]+)|d\s*=\s*([0-9.]+))/);
+                    if (cylinderMatch) {
+                        const height = parseFloat(cylinderMatch[1]);
+                        const radius = cylinderMatch[2] ? parseFloat(cylinderMatch[2]) : parseFloat(cylinderMatch[3]) / 2;
+                        shapes.push({
+                            type: 'cylinder',
+                            height: height,
+                            radius: radius,
+                            center: line.includes('center=true') || line.includes('center = true')
+                        });
+                        continue;
+                    }
+
+                    // Parse sphere(r=radius) or sphere(d=diameter)
+                    const sphereMatch = line.match(/sphere\s*\(\s*(?:r\s*=\s*([0-9.]+)|d\s*=\s*([0-9.]+))/);
+                    if (sphereMatch) {
+                        const radius = sphereMatch[1] ? parseFloat(sphereMatch[1]) : parseFloat(sphereMatch[2]) / 2;
+                        shapes.push({
+                            type: 'sphere',
+                            radius: radius
+                        });
+                    }
+                }
+
+                // If no shapes found, create a default cube
+                if (shapes.length === 0) {
+                    shapes.push({
+                        type: 'cube',
+                        size: [20, 20, 20],
+                        center: true
+                    });
+                }
+
+                return shapes;
+            }
+
+            renderThreeJSScene(container, shapes) {
+                // Set up Three.js scene
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setClearColor(0x1a1a1a, 1);
+                container.appendChild(renderer.domElement);
+
+                // Add lights
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                scene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+                directionalLight.position.set(50, 50, 50);
+                directionalLight.castShadow = true;
+                scene.add(directionalLight);
+
+                // Create materials
+                const material = new THREE.MeshPhongMaterial({
+                    color: 0x00D4AA,
+                    transparent: true,
+                    opacity: 0.9,
+                    shininess: 100
+                });
+
+                // Add shapes to scene
+                let maxDimension = 0;
+                shapes.forEach(shape => {
+                    let geometry, mesh;
+
+                    switch (shape.type) {
+                        case 'cube':
+                            geometry = new THREE.BoxGeometry(shape.size[0], shape.size[1], shape.size[2]);
+                            mesh = new THREE.Mesh(geometry, material);
+                            if (!shape.center) {
+                                mesh.position.set(shape.size[0]/2, shape.size[1]/2, shape.size[2]/2);
+                            }
+                            maxDimension = Math.max(maxDimension, ...shape.size);
+                            break;
+
+                        case 'cylinder':
+                            geometry = new THREE.CylinderGeometry(shape.radius, shape.radius, shape.height, 32);
+                            mesh = new THREE.Mesh(geometry, material);
+                            if (!shape.center) {
+                                mesh.position.y = shape.height / 2;
+                            }
+                            maxDimension = Math.max(maxDimension, shape.radius * 2, shape.height);
+                            break;
+
+                        case 'sphere':
+                            geometry = new THREE.SphereGeometry(shape.radius, 32, 16);
+                            mesh = new THREE.Mesh(geometry, material);
+                            maxDimension = Math.max(maxDimension, shape.radius * 2);
+                            break;
+                    }
+
+                    if (mesh) {
+                        scene.add(mesh);
+                    }
+                });
+
+                // Position camera
+                const distance = maxDimension * 2;
+                camera.position.set(distance, distance, distance);
+                camera.lookAt(0, 0, 0);
+
+                // Add orbit controls if available
+                if (typeof THREE.OrbitControls !== 'undefined') {
+                    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                    controls.enableDamping = true;
+                    controls.dampingFactor = 0.05;
+                    controls.autoRotate = true;
+                    controls.autoRotateSpeed = 2;
+
+                    // Animation loop with controls
+                    const animate = () => {
+                        requestAnimationFrame(animate);
+                        controls.update();
+                        renderer.render(scene, camera);
+                    };
+                    animate();
+                } else {
+                    // Simple rotation animation without controls
+                    const animate = () => {
+                        requestAnimationFrame(animate);
+                        scene.rotation.y += 0.01;
+                        renderer.render(scene, camera);
+                    };
+                    animate();
+                }
+
+                // Handle window resize
+                const handleResize = () => {
+                    const width = container.clientWidth;
+                    const height = container.clientHeight;
+                    camera.aspect = width / height;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(width, height);
+                };
+
+                window.addEventListener('resize', handleResize);
+
+                // Clean up on container removal
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        mutation.removedNodes.forEach((node) => {
+                            if (node === container || node.contains(container)) {
+                                window.removeEventListener('resize', handleResize);
+                                observer.disconnect();
+                            }
+                        });
+                    });
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
             }
 
             escapeHtml(text) {
