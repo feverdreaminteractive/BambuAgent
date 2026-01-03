@@ -22,6 +22,11 @@
 	<true/>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>BambuAgent needs to discover and connect to your Bambu printer on the local network.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_bambu._tcp</string>
+		<string>_http._tcp</string>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>
