@@ -1,0 +1,9 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+anthropic==0.7.8
+paho-mqtt==1.6.1
+python-multipart==0.0.6
+aiofiles==23.2.1
+httpx==0.25.2
+python-dotenv==1.0.0

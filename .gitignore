@@ -1,0 +1,104 @@
+# iOS
+ios-app/BambuAgent.xcodeproj/project.xcworkspace/xcuserdata/
+ios-app/BambuAgent.xcodeproj/xcuserdata/
+ios-app/DerivedData/
+ios-app/*.hmap
+ios-app/*.ipa
+ios-app/*.dSYM.zip
+ios-app/*.dSYM
+
+# Xcode
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcscmblueprint
+*.xccheckout
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python
+backend/.env
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/*.so
+backend/.Python
+backend/venv/
+backend/env/
+backend/ENV/
+backend/.venv/
+backend/pip-log.txt
+backend/pip-delete-this-directory.txt
+backend/.pytest_cache/
+backend/htmlcov/
+backend/.coverage
+backend/.nyc_output
+backend/.cache
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+backend/temp_files/
+*.tmp
+*.temp
+*.stl
+*.3mf
+*.gcode
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Build artifacts
+backend/build/
+backend/dist/
+backend/*.egg-info/
+
+# Configuration files with sensitive data
+backend/config.json
+backend/secrets.json
+
+# Generated OpenSCAD files
+backend/generated_models/
+backend/output/
+
+# Test outputs
+backend/test_outputs/
+
+# Documentation builds
+docs/_build/
+
+# Node modules (if any)
+node_modules/
+
+# Swift Package Manager
+ios-app/.build/
+
+# CocoaPods (if used)
+ios-app/Pods/
+ios-app/Podfile.lock
+
+# Carthage (if used)
+ios-app/Carthage/Build/
+
+# fastlane
+ios-app/fastlane/report.xml
+ios-app/fastlane/Preview.html
+ios-app/fastlane/screenshots/**/*.png
+ios-app/fastlane/test_output
+
+# Code signing
+ios-app/*.mobileprovision
+ios-app/*.p12
