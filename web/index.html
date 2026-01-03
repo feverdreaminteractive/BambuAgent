@@ -210,8 +210,9 @@
         // BambuAgent Web Interface
         class BambuAgent {
             constructor() {
-                // Use Railway backend URL for production
-                this.apiUrl = 'https://bambuagent-backend-production.up.railway.app';
+                // Temporarily use local backend for testing
+                // TODO: Switch to Railway URL once deployed
+                this.apiUrl = 'http://localhost:8000';
                 this.isGenerating = false;
                 this.init();
             }
