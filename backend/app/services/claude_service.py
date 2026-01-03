@@ -61,8 +61,8 @@ Requirements:
             message = client.messages.create(
                 model="claude-3-sonnet-20241022",
                 max_tokens=2000,
+                system=system_prompt,
                 messages=[
-                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ]
             )
