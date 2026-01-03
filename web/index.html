@@ -597,7 +597,7 @@
                 resultsContent.innerHTML = `
                     <div class="bg-gray-800 rounded-lg p-4">
                         <h4 class="font-semibold mb-2 text-green-400">Generated OpenSCAD Code</h4>
-                        <pre class="text-sm text-gray-300 overflow-x-auto bg-gray-900 p-3 rounded"><code>${this.escapeHtml(data.openscadCode)}</code></pre>
+                        <pre class="text-sm text-gray-300 overflow-x-auto bg-gray-900 p-3 rounded"><code>${this.escapeHtml(data.openscad_code)}</code></pre>
                     </div>
 
                     <div class="bg-gray-800 rounded-lg p-4">
@@ -612,7 +612,7 @@
                     </div>` : ''}
 
                     <div class="flex space-x-4">
-                        <button onclick="bambuAgent.copyToClipboard('${this.escapeHtml(data.openscadCode).replace(/'/g, "\\\'")}')"
+                        <button onclick="bambuAgent.copyToClipboard('${this.escapeHtml(data.openscad_code).replace(/'/g, "\\\'")}')"
                                 class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md text-white font-medium">
                             Copy Code
                         </button>
@@ -655,7 +655,7 @@
 
                     <div class="bg-gray-800 rounded-lg p-4">
                         <h4 class="font-semibold mb-2 text-green-400">OpenSCAD Code</h4>
-                        <pre class="text-sm text-gray-300 overflow-x-auto bg-gray-900 p-3 rounded"><code>${this.escapeHtml(data.openscadCode)}</code></pre>
+                        <pre class="text-sm text-gray-300 overflow-x-auto bg-gray-900 p-3 rounded"><code>${this.escapeHtml(data.openscad_code)}</code></pre>
                     </div>
                 `;
 
