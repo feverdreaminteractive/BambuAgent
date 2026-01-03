@@ -1,0 +1,7 @@
+# Ignore backend files for Netlify (frontend only)
+backend/
+*.py
+requirements.txt
+.env
+venv/
+__pycache__/
