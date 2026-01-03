@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		BA0000012B000001001BA000 /* BambuAgentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0000002B000001001BA000 /* BambuAgentApp.swift */; };
+		BA000001A2B000002001BA000 /* PrinterStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0000192B000002001BA000 /* PrinterStatusView.swift */; };
+		BA000001C2B000002001BA000 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA000001B2B000002001BA000 /* SettingsView.swift */; };
+		BA000001E2B000002001BA000 /* PrintJobModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA000001D2B000002001BA000 /* PrintJobModel.swift */; };
 		BA0000032B000001001BA000 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0000022B000001001BA000 /* ContentView.swift */; };
 		BA0000052B000001001BA000 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BA0000042B000001001BA000 /* Assets.xcassets */; };
 		BA0000082B000001001BA000 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BA0000072B000001001BA000 /* Preview Assets.xcassets */; };
@@ -16,26 +19,23 @@
 		BA0000142B000002001BA000 /* WiFiManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0000132B000002001BA000 /* WiFiManager.swift */; };
 		BA0000162B000002001BA000 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0000152B000002001BA000 /* DesignSystem.swift */; };
 		BA0000182B000002001BA000 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0000172B000002001BA000 /* HomeView.swift */; };
-		BA000001A2B000002001BA000 /* PrinterStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0000192B000002001BA000 /* PrinterStatusView.swift */; };
-		BA000001C2B000002001BA000 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA000001B2B000002001BA000 /* SettingsView.swift */; };
-		BA000001E2B000002001BA000 /* PrintJobModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA000001D2B000002001BA000 /* PrintJobModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		BA0000FD2AFFFFFF001BA000 /* BambuAgent.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BambuAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA0000002B000001001BA000 /* BambuAgentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuAgentApp.swift; sourceTree = "<group>"; };
+		BA000000F2B000002001BA000 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
+		BA000001B2B000002001BA000 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		BA000001D2B000002001BA000 /* PrintJobModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintJobModel.swift; sourceTree = "<group>"; };
+		BA000001F2B000002001BA000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BA0000022B000001001BA000 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		BA0000042B000001001BA000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BA0000072B000001001BA000 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		BA000000F2B000002001BA000 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
 		BA0000112B000002001BA000 /* PrinterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrinterManager.swift; sourceTree = "<group>"; };
 		BA0000132B000002001BA000 /* WiFiManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiManager.swift; sourceTree = "<group>"; };
 		BA0000152B000002001BA000 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		BA0000172B000002001BA000 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		BA0000192B000002001BA000 /* PrinterStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrinterStatusView.swift; sourceTree = "<group>"; };
-		BA000001B2B000002001BA000 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		BA000001D2B000002001BA000 /* PrintJobModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintJobModel.swift; sourceTree = "<group>"; };
-		BA000001F2B000002001BA000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BA0000FD2AFFFFFF001BA000 /* BambuAgent.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BambuAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,38 +49,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		BA0000F42AFFFFFF001BA000 = {
-			isa = PBXGroup;
-			children = (
-				BA0000FF2AFFFFFF001BA000 /* BambuAgent */,
-				BA0000FE2AFFFFFF001BA000 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		BA0000FE2AFFFFFF001BA000 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				BA0000FD2AFFFFFF001BA000 /* BambuAgent.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		BA0000FF2AFFFFFF001BA000 /* BambuAgent */ = {
-			isa = PBXGroup;
-			children = (
-				BA000001F2B000002001BA000 /* Info.plist */,
-				BA0000002B000001001BA000 /* BambuAgentApp.swift */,
-				BA0000022B000001001BA000 /* ContentView.swift */,
-				BA0000202B000003001BA000 /* Views */,
-				BA0000212B000003001BA000 /* Services */,
-				BA0000222B000003001BA000 /* Models */,
-				BA0000232B000003001BA000 /* DesignSystem */,
-				BA0000042B000001001BA000 /* Assets.xcassets */,
-				BA0000062B000001001BA000 /* Preview Content */,
-			);
-			path = BambuAgent;
-			sourceTree = "<group>";
-		};
 		BA0000062B000001001BA000 /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
@@ -123,6 +91,38 @@
 				BA0000152B000002001BA000 /* DesignSystem.swift */,
 			);
 			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		BA0000F42AFFFFFF001BA000 = {
+			isa = PBXGroup;
+			children = (
+				BA0000FF2AFFFFFF001BA000 /* BambuAgent */,
+				BA0000FE2AFFFFFF001BA000 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BA0000FE2AFFFFFF001BA000 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BA0000FD2AFFFFFF001BA000 /* BambuAgent.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BA0000FF2AFFFFFF001BA000 /* BambuAgent */ = {
+			isa = PBXGroup;
+			children = (
+				BA000001F2B000002001BA000 /* Info.plist */,
+				BA0000002B000001001BA000 /* BambuAgentApp.swift */,
+				BA0000022B000001001BA000 /* ContentView.swift */,
+				BA0000202B000003001BA000 /* Views */,
+				BA0000212B000003001BA000 /* Services */,
+				BA0000222B000003001BA000 /* Models */,
+				BA0000232B000003001BA000 /* DesignSystem */,
+				BA0000042B000001001BA000 /* Assets.xcassets */,
+				BA0000062B000001001BA000 /* Preview Content */,
+			);
+			path = BambuAgent;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -211,69 +211,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		BA0001092B000001001BA000 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = iphoneos;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
 		BA000010A2B000001001BA000 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -338,6 +275,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BambuAgent/Preview Content\"";
+				DEVELOPMENT_TEAM = AWLLM3Q8GW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BambuAgent/Info.plist;
@@ -369,6 +307,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BambuAgent/Preview Content\"";
+				DEVELOPMENT_TEAM = AWLLM3Q8GW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BambuAgent/Info.plist;
@@ -392,23 +331,86 @@
 			};
 			name = Release;
 		};
+		BA0001092B000001001BA000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		BA0000F82AFFFFFF001BA000 /* Build configuration list for PBXProject "BambuAgent" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				BA0001092B000001001BA000 /* Debug */,
-				BA000010A2B000001001BA000 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		BA000010B2B000001001BA000 /* Build configuration list for PBXNativeTarget "BambuAgent" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BA000010C2B000001001BA000 /* Debug */,
 				BA000010D2B000001001BA000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BA0000F82AFFFFFF001BA000 /* Build configuration list for PBXProject "BambuAgent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA0001092B000001001BA000 /* Debug */,
+				BA000010A2B000001001BA000 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

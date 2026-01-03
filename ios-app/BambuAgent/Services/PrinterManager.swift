@@ -87,30 +87,44 @@ class PrinterManager {
     private func discoverPrintersOnNetwork() async throws -> [BambuPrinter] {
         return await withCheckedContinuation { continuation in
             var discoveredPrinters: [BambuPrinter] = []
+            var hasResumed = false
+            let resumeLock = NSLock()
+
+            func safeResume(with result: [BambuPrinter]) {
+                resumeLock.lock()
+                defer { resumeLock.unlock() }
+
+                if !hasResumed {
+                    hasResumed = true
+                    continuation.resume(returning: result)
+                }
+            }
 
             // Scan common IP ranges for Bambu printers
             let ipRanges = generateIPRanges()
             let group = DispatchGroup()
 
-            for ip in ipRanges.prefix(20) { // Limit to first 20 IPs for demo
+            for ip in ipRanges.prefix(5) { // Limit to first 5 IPs to avoid overwhelming the network
                 group.enter()
 
                 Task {
                     defer { group.leave() }
 
                     if let printer = await checkForBambuPrinter(at: ip) {
+                        resumeLock.lock()
                         discoveredPrinters.append(printer)
+                        resumeLock.unlock()
                     }
                 }
             }
 
             group.notify(queue: .main) {
-                continuation.resume(returning: discoveredPrinters)
+                safeResume(with: discoveredPrinters)
             }
 
-            // Timeout after 10 seconds
-            DispatchQueue.global().asyncAfter(deadline: .now() + 10) {
-                continuation.resume(returning: discoveredPrinters)
+            // Timeout after 5 seconds
+            DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+                safeResume(with: discoveredPrinters)
             }
         }
     }
@@ -135,12 +149,25 @@ class PrinterManager {
         // Try to connect to Bambu MQTT port (8883) to verify it's a Bambu printer
         let connection = NWConnection(
             host: NWEndpoint.Host(ip),
-            port: NWEndpoint.Port(8883)!,
+            port: NWEndpoint.Port(8883),
             using: .tcp
         )
 
         return await withCheckedContinuation { continuation in
-            connection.stateUpdateHandler = { state in
+            var hasResumed = false
+            let resumeLock = NSLock()
+
+            func safeResume(with result: BambuPrinter?) {
+                resumeLock.lock()
+                defer { resumeLock.unlock() }
+
+                if !hasResumed {
+                    hasResumed = true
+                    continuation.resume(returning: result)
+                }
+            }
+
+            connection.stateUpdateHandler = { (state: NWConnection.State) in
                 switch state {
                 case .ready:
                     connection.cancel()
@@ -153,11 +180,11 @@ class PrinterManager {
                         accessCode: nil,
                         isOnline: true
                     )
-                    continuation.resume(returning: printer)
+                    safeResume(with: printer)
 
                 case .failed, .cancelled:
                     connection.cancel()
-                    continuation.resume(returning: nil)
+                    safeResume(with: nil)
 
                 default:
                     break
@@ -166,10 +193,10 @@ class PrinterManager {
 
             connection.start(queue: .global())
 
-            // Timeout after 3 seconds
-            DispatchQueue.global().asyncAfter(deadline: .now() + 3) {
+            // Timeout after 2 seconds
+            DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
                 connection.cancel()
-                continuation.resume(returning: nil)
+                safeResume(with: nil)
             }
         }
     }
@@ -215,7 +242,11 @@ class PrinterManager {
 
     @MainActor
     func disconnectFromPrinter() {
-        mqttClient?.disconnect()
+        if let mqttClient = mqttClient {
+            Task {
+                await mqttClient.disconnect()
+            }
+        }
         mqttClient = nil
         ftpClient = nil
 
@@ -227,7 +258,7 @@ class PrinterManager {
     // MARK: - Print Job Management
     @MainActor
     func sendPrintJob(_ job: PrintJob) async throws {
-        guard let printer = connectedPrinter,
+        guard let _ = connectedPrinter,
               let ftpClient = ftpClient,
               let mqttClient = mqttClient else {
             throw PrinterError.notConnected
@@ -310,6 +341,7 @@ class PrinterManager {
     }
 
     // MARK: - Utility Methods
+    @MainActor
     func removePrinter(_ printer: BambuPrinter) {
         printers.removeAll { $0.id == printer.id }
         savePrinters()
@@ -357,7 +389,7 @@ private actor MQTTClient {
         try await Task.sleep(nanoseconds: 1_000_000_000)
     }
 
-    func disconnect() {
+    func disconnect() async {
         // Implement disconnect logic
     }
 

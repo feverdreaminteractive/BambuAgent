@@ -16,11 +16,20 @@ class WiFiManager {
     private let pathMonitor = NWPathMonitor(requiredInterfaceType: .wifi)
     private let monitorQueue = DispatchQueue(label: "WiFiMonitor")
 
-    enum ConnectionStatus {
-        case disconnected
-        case connecting
-        case connected
-        case failed
+    enum ConnectionStatus: String, CaseIterable {
+        case disconnected = "Disconnected"
+        case connecting = "Connecting"
+        case connected = "Connected"
+        case failed = "Failed"
+
+        var color: Color {
+            switch self {
+            case .disconnected: return .gray
+            case .connecting: return .orange
+            case .connected: return .bambuPrimary
+            case .failed: return .red
+            }
+        }
     }
 
     // MARK: - Initialization
@@ -39,7 +48,7 @@ class WiFiManager {
         pathMonitor.start(queue: monitorQueue)
     }
 
-    private func updateConnectionStatus(path: NWPath) {
+    private func updateConnectionStatus(path: Network.NWPath) {
         if path.status == .satisfied && path.usesInterfaceType(.wifi) {
             connectionStatus = .connected
             getCurrentNetwork()
@@ -291,7 +300,7 @@ private class BonjourDiscoveryDelegate: NSObject, NetServiceBrowserDelegate {
 
         if !moreComing {
             // Convert services to BambuDevice objects
-            let devices = discoveredServices.compactMap { service in
+            let devices: [BambuDevice] = discoveredServices.compactMap { service in
                 guard let addresses = service.addresses,
                       let address = addresses.first else { return nil }
 
@@ -321,7 +330,8 @@ private class BonjourDiscoveryDelegate: NSObject, NetServiceBrowserDelegate {
         guard let addr = address else { return nil }
 
         var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-        let result = getnameinfo(&addr, socklen_t(data.count), &hostname, socklen_t(hostname.count), nil, 0, NI_NUMERICHOST)
+        var mutableAddr = addr
+        let result = getnameinfo(&mutableAddr, socklen_t(data.count), &hostname, socklen_t(hostname.count), nil, 0, NI_NUMERICHOST)
 
         return result == 0 ? String(cString: hostname) : nil
     }

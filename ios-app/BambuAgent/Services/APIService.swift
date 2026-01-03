@@ -17,7 +17,9 @@ class APIService {
     // MARK: - Initialization
     init() {
         loadServerURL()
-        checkServerConnection()
+        Task { @MainActor in
+            checkServerConnection()
+        }
     }
 
     // MARK: - Server Configuration
@@ -301,13 +303,13 @@ struct PrintResponse: Codable {
 
 struct PrinterStatusResponse: Codable {
     let status: String
-    let currentJob: PrintJobStatus?
+    let currentJob: CurrentJobInfo?
     let bedTemperature: Double?
     let nozzleTemperature: Double?
     let progress: Double?
 }
 
-struct PrintJobStatus: Codable {
+struct CurrentJobInfo: Codable {
     let name: String
     let progress: Double
     let timeRemaining: String?

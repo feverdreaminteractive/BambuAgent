@@ -85,7 +85,7 @@ struct HomeView: View {
                     systemImage: "brain.head.profile",
                     color: .bambuPrimary
                 ) {
-                    HapticFeedback.light()
+                    // HapticFeedback.light() // TODO: Add back when properly integrated
                     showingPromptSheet = true
                 }
 
@@ -95,7 +95,7 @@ struct HomeView: View {
                     systemImage: "bolt.fill",
                     color: .bambuAccent
                 ) {
-                    HapticFeedback.light()
+                    // HapticFeedback.light() // TODO: Add back when properly integrated
                     // TODO: Implement quick print
                 }
 
@@ -105,7 +105,7 @@ struct HomeView: View {
                     systemImage: "folder.fill",
                     color: .bambuSecondary
                 ) {
-                    HapticFeedback.light()
+                    // HapticFeedback.light() // TODO: Add back when properly integrated
                     // TODO: Implement file browser
                 }
 
@@ -115,7 +115,7 @@ struct HomeView: View {
                     systemImage: "star.fill",
                     color: .statusWarning
                 ) {
-                    HapticFeedback.light()
+                    // HapticFeedback.light() // TODO: Add back when properly integrated
                     showSamplePrompts()
                 }
             }
@@ -235,23 +235,29 @@ struct HomeView: View {
 
         Task {
             if let index = generationHistory.firstIndex(where: { $0.id == request.id }) {
-                generationHistory[index].status = .generating
+                await MainActor.run {
+                    generationHistory[index].status = .generating
+                }
 
                 do {
                     let response = try await apiService.generateModel(from: request.prompt)
 
-                    generationHistory[index].status = .completed
-                    generationHistory[index].openscadCode = response.openscadCode
-                    generationHistory[index].explanation = response.explanation
-                    generationHistory[index].estimatedPrintTime = response.estimatedPrintTime
+                    await MainActor.run {
+                        generationHistory[index].status = .completed
+                        generationHistory[index].openscadCode = response.openscadCode
+                        generationHistory[index].explanation = response.explanation
+                        generationHistory[index].estimatedPrintTime = response.estimatedPrintTime
+                    }
 
-                    HapticFeedback.success()
+                    // HapticFeedback.success() // TODO: Add back when properly integrated
 
                 } catch {
-                    generationHistory[index].status = .failed
-                    generationHistory[index].errorMessage = error.localizedDescription
+                    await MainActor.run {
+                        generationHistory[index].status = .failed
+                        generationHistory[index].errorMessage = error.localizedDescription
+                    }
 
-                    HapticFeedback.error()
+                    // HapticFeedback.error() // TODO: Add back when properly integrated
                 }
             }
         }
@@ -274,11 +280,11 @@ struct HomeView: View {
                 )
 
                 try await printerManager.sendPrintJob(job)
-                HapticFeedback.success()
+                // HapticFeedback.success() // TODO: Add back when properly integrated
 
             } catch {
                 // Show error
-                HapticFeedback.error()
+                // HapticFeedback.error() // TODO: Add back when properly integrated
             }
         }
     }
