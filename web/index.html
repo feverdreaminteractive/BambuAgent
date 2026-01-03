@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BambuAgent - AI-Powered 3D Printing</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Flowbite -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
+
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --bambu-primary: #00D4AA;
+            --bambu-dark: #1a1a1a;
+            --bambu-gray: #2d2d2d;
+        }
+
+        .bambu-gradient {
+            background: linear-gradient(135deg, #00D4AA 0%, #00B894 100%);
+        }
+
+        .bambu-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Navigation -->
+    <nav class="bg-gray-900 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold bambu-gradient bg-clip-text text-transparent">BambuAgent</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button type="button" class="bg-gray-800 p-2 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="relative overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="relative z-10 pb-8 bg-gray-900 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+                <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+                    <div class="sm:text-center lg:text-left">
+                        <h1 class="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl">
+                            <span class="block">AI-Powered</span>
+                            <span class="block bambu-gradient bg-clip-text text-transparent">3D Printing</span>
+                        </h1>
+                        <p class="mt-3 text-base text-gray-300 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                            Transform your ideas into 3D prints with AI. Just describe what you want, and BambuAgent will generate, slice, and send it to your Bambu A1 mini printer.
+                        </p>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <!-- 3D Printer illustration on the right -->
+        <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+            <div class="h-56 w-full lg:h-full flex items-center justify-center">
+                <div class="text-8xl opacity-20">🖨️</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+
+        <!-- AI Generation Card -->
+        <div class="mb-8">
+            <div class="bambu-card rounded-lg p-6">
+                <h2 class="text-2xl font-bold mb-4 flex items-center">
+                    <svg class="w-8 h-8 mr-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                    Generate with AI
+                </h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="prompt" class="block text-sm font-medium text-gray-300 mb-2">
+                            Describe what you want to 3D print
+                        </label>
+                        <textarea
+                            id="prompt"
+                            rows="3"
+                            class="block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            placeholder="e.g., A small keychain with my initials, A phone stand for my desk, A miniature Eiffel Tower..."
+                        ></textarea>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <button
+                            id="generateBtn"
+                            type="button"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bambu-gradient hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Generate Model
+                        </button>
+
+                        <button
+                            id="fullPipelineBtn"
+                            type="button"
+                            class="inline-flex items-center px-4 py-2 border border-green-500 text-sm font-medium rounded-md text-green-400 bg-transparent hover:bg-green-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                            Generate & Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <div class="bambu-card rounded-lg p-6">
+                <h3 class="text-xl font-bold mb-4">Generated Model</h3>
+                <div id="resultsContent" class="space-y-4">
+                    <!-- Results will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <!-- API Status -->
+            <div class="bambu-card rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div id="apiStatus" class="flex items-center justify-center h-8 w-8 rounded-md bg-red-500">
+                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-300 truncate">API Status</dt>
+                            <dd id="apiStatusText" class="text-lg font-medium text-white">Checking...</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Printer Status -->
+            <div class="bambu-card rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div id="printerStatus" class="flex items-center justify-center h-8 w-8 rounded-md bg-gray-500">
+                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-300 truncate">Printer</dt>
+                            <dd id="printerStatusText" class="text-lg font-medium text-white">Not Connected</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generation Status -->
+            <div class="bambu-card rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div id="generationStatus" class="flex items-center justify-center h-8 w-8 rounded-md bg-gray-500">
+                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-300 truncate">AI Generation</dt>
+                            <dd id="generationStatusText" class="text-lg font-medium text-white">Ready</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flowbite JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // BambuAgent Web Interface
+        class BambuAgent {
+            constructor() {
+                // Use Railway backend URL for production
+                this.apiUrl = 'https://bambuagent-backend-production.up.railway.app';
+                this.isGenerating = false;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.checkApiStatus();
+            }
+
+            bindEvents() {
+                const generateBtn = document.getElementById('generateBtn');
+                const fullPipelineBtn = document.getElementById('fullPipelineBtn');
+                const promptInput = document.getElementById('prompt');
+
+                generateBtn.addEventListener('click', () => this.generateModel());
+                fullPipelineBtn.addEventListener('click', () => this.runFullPipeline());
+
+                // Enter key support
+                promptInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        this.generateModel();
+                    }
+                });
+            }
+
+            async checkApiStatus() {
+                try {
+                    const response = await fetch(`${this.apiUrl}/api`);
+                    if (response.ok) {
+                        this.updateStatusIndicator('api', 'connected', 'Connected');
+                    } else {
+                        this.updateStatusIndicator('api', 'error', 'Error');
+                    }
+                } catch (error) {
+                    this.updateStatusIndicator('api', 'disconnected', 'Disconnected');
+                }
+            }
+
+            updateStatusIndicator(type, status, text) {
+                const statusElement = document.getElementById(`${type}Status`);
+                const statusTextElement = document.getElementById(`${type}StatusText`);
+
+                // Remove existing status classes
+                statusElement.className = statusElement.className.replace(/bg-\w+-\d+/g, '');
+
+                // Add new status class
+                switch (status) {
+                    case 'connected':
+                        statusElement.classList.add('bg-green-500');
+                        statusElement.innerHTML = `
+                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        `;
+                        break;
+                    case 'error':
+                        statusElement.classList.add('bg-red-500');
+                        statusElement.innerHTML = `
+                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        `;
+                        break;
+                    case 'loading':
+                        statusElement.classList.add('bg-yellow-500');
+                        statusElement.innerHTML = `
+                            <div class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                        `;
+                        break;
+                    default:
+                        statusElement.classList.add('bg-gray-500');
+                        statusElement.innerHTML = `
+                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        `;
+                }
+
+                statusTextElement.textContent = text;
+            }
+
+            async generateModel() {
+                const prompt = document.getElementById('prompt').value.trim();
+                if (!prompt) {
+                    this.showNotification('Please enter a description of what you want to 3D print', 'error');
+                    return;
+                }
+
+                this.setGenerating(true);
+                this.updateStatusIndicator('generation', 'loading', 'Generating...');
+
+                try {
+                    const response = await fetch(`${this.apiUrl}/generate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            prompt: prompt,
+                            userId: 'web_user'
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        this.displayResults(data);
+                        this.updateStatusIndicator('generation', 'connected', 'Complete');
+                        this.showNotification('Model generated successfully!', 'success');
+                    } else {
+                        throw new Error(data.detail || 'Generation failed');
+                    }
+                } catch (error) {
+                    console.error('Generation error:', error);
+                    this.updateStatusIndicator('generation', 'error', 'Failed');
+                    this.showNotification(`Generation failed: ${error.message}`, 'error');
+                } finally {
+                    this.setGenerating(false);
+                }
+            }
+
+            async runFullPipeline() {
+                const prompt = document.getElementById('prompt').value.trim();
+                if (!prompt) {
+                    this.showNotification('Please enter a description of what you want to 3D print', 'error');
+                    return;
+                }
+
+                this.setGenerating(true);
+                this.updateStatusIndicator('generation', 'loading', 'Processing...');
+
+                try {
+                    const response = await fetch(`${this.apiUrl}/pipeline/full`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            prompt: prompt,
+                            userId: 'web_user'
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        this.displayFullPipelineResults(data);
+                        this.updateStatusIndicator('generation', 'connected', 'Complete');
+                        this.showNotification('Model generated and sent to printer!', 'success');
+                    } else {
+                        throw new Error(data.detail || 'Pipeline failed');
+                    }
+                } catch (error) {
+                    console.error('Pipeline error:', error);
+                    this.updateStatusIndicator('generation', 'error', 'Failed');
+                    this.showNotification(`Pipeline failed: ${error.message}`, 'error');
+                } finally {
+                    this.setGenerating(false);
+                }
+            }
+
+            setGenerating(generating) {
+                this.isGenerating = generating;
+                const generateBtn = document.getElementById('generateBtn');
+                const fullPipelineBtn = document.getElementById('fullPipelineBtn');
+
+                generateBtn.disabled = generating;
+                fullPipelineBtn.disabled = generating;
+
+                if (generating) {
+                    generateBtn.innerHTML = `
+                        <div class="animate-spin h-5 w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
+                        Generating...
+                    `;
+                    fullPipelineBtn.innerHTML = `
+                        <div class="animate-spin h-5 w-5 mr-2 border-2 border-green-400 border-t-transparent rounded-full"></div>
+                        Processing...
+                    `;
+                } else {
+                    generateBtn.innerHTML = `
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Generate Model
+                    `;
+                    fullPipelineBtn.innerHTML = `
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                        Generate & Print
+                    `;
+                }
+            }
+
+            displayResults(data) {
+                const resultsSection = document.getElementById('resultsSection');
+                const resultsContent = document.getElementById('resultsContent');
+
+                resultsContent.innerHTML = `
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h4 class="font-semibold mb-2 text-green-400">Generated OpenSCAD Code</h4>
+                        <pre class="text-sm text-gray-300 overflow-x-auto bg-gray-900 p-3 rounded"><code>${this.escapeHtml(data.openscadCode)}</code></pre>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h4 class="font-semibold mb-2 text-blue-400">Explanation</h4>
+                        <p class="text-gray-300">${this.escapeHtml(data.explanation)}</p>
+                    </div>
+
+                    ${data.estimatedPrintTime ? `
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h4 class="font-semibold mb-2 text-yellow-400">Estimated Print Time</h4>
+                        <p class="text-gray-300">${this.escapeHtml(data.estimatedPrintTime)}</p>
+                    </div>` : ''}
+
+                    <div class="flex space-x-4">
+                        <button onclick="bambuAgent.copyToClipboard('${this.escapeHtml(data.openscadCode).replace(/'/g, "\\\'")}')"
+                                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md text-white font-medium">
+                            Copy Code
+                        </button>
+                    </div>
+                `;
+
+                resultsSection.classList.remove('hidden');
+            }
+
+            displayFullPipelineResults(data) {
+                const resultsSection = document.getElementById('resultsSection');
+                const resultsContent = document.getElementById('resultsContent');
+
+                resultsContent.innerHTML = `
+                    <div class="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                        <h4 class="font-semibold mb-2 text-green-400 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Print Job Sent Successfully
+                        </h4>
+                        <p class="text-green-300">Job ID: ${data.jobId}</p>
+                        <p class="text-gray-300 mt-2">${data.message}</p>
+                    </div>
+
+                    ${data.estimatedPrintTime ? `
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h4 class="font-semibold mb-2 text-yellow-400">Estimated Print Time</h4>
+                        <p class="text-gray-300">${this.escapeHtml(data.estimatedPrintTime)}</p>
+                    </div>` : ''}
+
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h4 class="font-semibold mb-2 text-blue-400">Generated Files</h4>
+                        <ul class="space-y-1 text-gray-300">
+                            <li>• OpenSCAD Code: Generated</li>
+                            <li>• STL File: ${data.stlPath}</li>
+                            <li>• G-code File: ${data.gcodePath}</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h4 class="font-semibold mb-2 text-green-400">OpenSCAD Code</h4>
+                        <pre class="text-sm text-gray-300 overflow-x-auto bg-gray-900 p-3 rounded"><code>${this.escapeHtml(data.openscadCode)}</code></pre>
+                    </div>
+                `;
+
+                resultsSection.classList.remove('hidden');
+            }
+
+            copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    this.showNotification('Code copied to clipboard!', 'success');
+                }).catch(() => {
+                    this.showNotification('Failed to copy to clipboard', 'error');
+                });
+            }
+
+            showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-transform duration-300 translate-x-full`;
+
+                const colors = {
+                    success: 'bg-green-600 text-white',
+                    error: 'bg-red-600 text-white',
+                    info: 'bg-blue-600 text-white',
+                    warning: 'bg-yellow-600 text-white'
+                };
+
+                notification.className += ` ${colors[type] || colors.info}`;
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="flex-1">${this.escapeHtml(message)}</span>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+
+                document.body.appendChild(notification);
+
+                // Animate in
+                setTimeout(() => {
+                    notification.classList.remove('translate-x-full');
+                }, 100);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    notification.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }, 5000);
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize the app
+        const bambuAgent = new BambuAgent();
+    </script>
+</body>
+</html>

@@ -102,3 +102,5 @@ ios-app/fastlane/test_output
 # Code signing
 ios-app/*.mobileprovision
 ios-app/*.p12
+# Local Netlify folder
+.netlify
