@@ -25,12 +25,12 @@ class ClaudeService:
         if not client:
             # Return a simple cube for testing when API key is not available
             return {
-                "code": """
+                "openscadCode": """
 // Simple test cube
 cube([20, 20, 20], center=true);
 """,
                 "explanation": "Test cube generated (no API key configured)",
-                "estimated_print_time": "15 minutes"
+                "estimatedPrintTime": "15 minutes"
             }
 
         try:
@@ -98,16 +98,16 @@ Requirements:
                     break
 
             return {
-                "code": openscad_code.strip(),
+                "openscadCode": openscad_code.strip(),
                 "explanation": explanation,
-                "estimated_print_time": estimated_time
+                "estimatedPrintTime": estimated_time
             }
 
         except Exception as e:
             logger.error(f"Claude API error: {str(e)}")
             # Return fallback code
             return {
-                "code": f"""
+                "openscadCode": f"""
 // Fallback design for: {prompt}
 // Simple parametric box
 length = 50;
@@ -122,5 +122,5 @@ difference() {{
 }}
 """,
                 "explanation": f"Fallback design generated due to API error: {str(e)}",
-                "estimated_print_time": "30 minutes"
+                "estimatedPrintTime": "30 minutes"
             }
