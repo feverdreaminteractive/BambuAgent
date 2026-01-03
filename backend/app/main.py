@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -26,6 +26,7 @@ from .services.claude_service import ClaudeService
 from .services.openscad_service import OpenSCADService
 from .services.slicer_service import SlicerService
 from .services.bambu_service import BambuService
+from .services.printer_discovery import discover_bambu_printers
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -54,7 +55,11 @@ if web_dir.exists() and (web_dir / "static").exists():
     app.mount("/static", StaticFiles(directory=str(web_dir / "static")), name="static")
 
 if web_dir.exists() and (web_dir / "templates").exists():
-    templates = Jinja2Templates(directory=str(web_dir / "templates"))
+    try:
+        templates = Jinja2Templates(directory=str(web_dir / "templates"))
+    except Exception as e:
+        logger.warning(f"Templates not available: {e}")
+        templates = None
 
 # Initialize services
 claude_service = ClaudeService()
@@ -125,14 +130,14 @@ async def api_root():
     return {"message": "BambuAgent API is running", "status": "healthy"}
 
 @app.post("/generate", response_model=GenerateResponse)
-async def generate_model(request: GenerateRequest):
+async def generate_model(request: GenerateRequest, x_api_key: str = Header(None)):
     """
     Generate OpenSCAD code from a text prompt using Claude API
     """
     try:
         logger.info(f"Generating model for prompt: {request.prompt}")
 
-        result = await claude_service.generate_openscad(request.prompt)
+        result = await claude_service.generate_openscad(request.prompt, x_api_key)
 
         return GenerateResponse(
             openscad_code=result["code"],
@@ -257,6 +262,28 @@ async def list_printer_jobs():
     except Exception as e:
         logger.error(f"Error listing jobs: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to list jobs: {str(e)}")
+
+@app.get("/printer/discover")
+async def discover_printers():
+    """
+    Discover Bambu printers on the network
+    """
+    try:
+        logger.info("Starting printer discovery...")
+
+        printers = await discover_bambu_printers(timeout=8)
+
+        logger.info(f"Discovery completed. Found {len(printers)} printers.")
+
+        return {
+            "printers": printers,
+            "count": len(printers),
+            "message": f"Found {len(printers)} Bambu printer(s) on the network"
+        }
+
+    except Exception as e:
+        logger.error(f"Error during printer discovery: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to discover printers: {str(e)}")
 
 @app.post("/pipeline/full")
 async def full_pipeline(request: GenerateRequest, background_tasks: BackgroundTasks):

@@ -14,11 +14,15 @@ class ClaudeService:
 
         self.client = Anthropic(api_key=self.api_key) if self.api_key else None
 
-    async def generate_openscad(self, prompt: str) -> Dict[str, Any]:
+    async def generate_openscad(self, prompt: str, user_api_key: str = None) -> Dict[str, Any]:
         """
         Generate OpenSCAD code from a text prompt using Claude API
         """
-        if not self.client:
+        # Use user-provided API key if available, otherwise fall back to environment key
+        api_key = user_api_key or self.api_key
+        client = Anthropic(api_key=api_key) if api_key else None
+
+        if not client:
             # Return a simple cube for testing when API key is not available
             return {
                 "code": """
@@ -54,7 +58,7 @@ Requirements:
 - Minimum wall thickness of 0.8mm
 - Practical and functional design"""
 
-            message = self.client.messages.create(
+            message = client.messages.create(
                 model="claude-3-sonnet-20241022",
                 max_tokens=2000,
                 messages=[
