@@ -1,7 +1,6 @@
 [build]
   publish = "web"
   command = "echo 'Static site ready'"
-  base = "/"
 
 [[headers]]
   for = "/*"
