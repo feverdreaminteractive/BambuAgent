@@ -377,7 +377,7 @@ struct PrinterSetupView: View {
             await printerManager.connectToPrinter(updatedPrinter, accessCode: accessCode)
 
             // Simulate connection process
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            try? await Task.sleep(nanoseconds: 500_000_000)
 
             await MainActor.run {
                 // Save filament and plate preferences

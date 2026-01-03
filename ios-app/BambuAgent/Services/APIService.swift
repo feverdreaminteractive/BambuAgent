@@ -18,17 +18,14 @@ class APIService {
     private static let productionURL = "https://bambuagent-backend-production.up.railway.app"
     private static let developmentURL = "http://192.168.86.177:8000"
 
-    private var defaultURL: URL {
-        #if DEBUG
-        return URL(string: Self.developmentURL)!
-        #else
-        return URL(string: Self.productionURL)!
-        #endif
-    }
-
     // MARK: - Initialization
     init() {
-        serverURL = defaultURL
+        #if DEBUG
+        serverURL = URL(string: Self.developmentURL)!
+        #else
+        serverURL = URL(string: Self.productionURL)!
+        #endif
+
         loadServerURL()
         Task { @MainActor in
             checkServerConnection()
@@ -223,8 +220,6 @@ class APIService {
         if let urlString = UserDefaults.standard.string(forKey: "ServerURL"),
            let url = URL(string: urlString) {
             serverURL = url
-        } else {
-            serverURL = defaultURL
         }
     }
 }

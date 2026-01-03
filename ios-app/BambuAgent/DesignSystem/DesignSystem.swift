@@ -187,7 +187,8 @@ struct ProgressRing: View {
     let strokeWidth: CGFloat
 
     init(progress: Double, strokeWidth: CGFloat = 8) {
-        self.progress = progress
+        // Ensure progress is valid and between 0 and 1
+        self.progress = max(0, min(1, progress.isNaN ? 0 : progress))
         self.strokeWidth = strokeWidth
     }
 

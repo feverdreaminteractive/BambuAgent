@@ -54,10 +54,19 @@ class PrinterManager {
     func scanForPrinters() async {
         guard !isScanning else { return }
 
+        // Temporarily disabled network scanning to prevent connection spam
+        // TODO: Re-enable after proper MQTT discovery implementation
         isScanning = true
         errorMessage = nil
         connectionStatus = .scanning
 
+        // Simulate scan completion without actual network discovery
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
+        isScanning = false
+        connectionStatus = .disconnected
+        return
+
+        /*
         do {
             let discoveredPrinters = try await discoverPrintersOnNetwork()
 
@@ -82,6 +91,7 @@ class PrinterManager {
         }
 
         isScanning = false
+        */
     }
 
     private func discoverPrintersOnNetwork() async throws -> [BambuPrinter] {
@@ -423,6 +433,6 @@ private actor FTPClient {
 
     func uploadFile(_ path: String, as fileName: String) async throws {
         // Implement FTP upload
-        try await Task.sleep(nanoseconds: 2_000_000_000)
+        try await Task.sleep(nanoseconds: 500_000_000)
     }
 }

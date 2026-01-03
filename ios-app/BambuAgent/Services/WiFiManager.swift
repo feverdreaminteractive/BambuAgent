@@ -208,7 +208,7 @@ class WiFiManager {
         // This would require MDM or special entitlements
         // For now, we'll simulate the connection process
 
-        try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds delay
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds delay
 
         // In a real implementation, you would:
         // 1. Use NEHotspotConfiguration for known networks
