@@ -59,7 +59,7 @@ Requirements:
 - Practical and functional design"""
 
             message = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-3-5-sonnet-20240620",
                 max_tokens=2000,
                 system=system_prompt,
                 messages=[
