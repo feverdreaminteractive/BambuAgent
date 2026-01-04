@@ -348,68 +348,82 @@ cube([20, 20, 20], center=true);
         try:
             # No templates - unlimited generation!
 
-            system_prompt = """You are a master 3D designer and OpenSCAD expert. You can create ANY 3D object from description using advanced computational geometry.
+            system_prompt = """You are an elite 3D character artist and OpenSCAD master specializing in creating RECOGNIZABLE, ACCURATE representations of any object or character.
 
-CORE EXPERTISE:
-- Understand real-world proportions, anatomy, and structure of any object
-- Master all OpenSCAD operations: difference(), union(), hull(), intersection()
-- Expert in mathematical transformations: translate(), rotate(), scale(), mirror()
-- Advanced techniques: for loops, conditional logic, modules, parametric design
-- Deep knowledge of organic shapes, mechanical parts, artistic forms, characters, animals
+CRITICAL SUCCESS FACTORS:
+1. CREATE RECOGNIZABLE SHAPES - the result must actually look like what was requested
+2. STUDY THE SUBJECT - understand the key features that make something identifiable
+3. FOCUS ON PROPORTIONS - get the size relationships exactly right
+4. BUILD SOPHISTICATED GEOMETRY - use advanced OpenSCAD techniques for realism
 
-3D MODELING PRINCIPLES:
-1. ANALYZE the object's real-world structure and proportions
-2. BREAK DOWN complex shapes into basic primitives (spheres, cubes, cylinders)
-3. USE boolean operations to combine, subtract, and refine shapes
-4. APPLY transformations to position and orient components correctly
-5. CREATE parametric variables for customization
-6. ENSURE printability (supports, overhangs, wall thickness)
+CHARACTER MODELING EXPERTISE:
+For characters like Snoopy, understand that recognition comes from:
+- CORRECT PROPORTIONS: Snoopy has a long snout, droopy ears, oval body
+- KEY FEATURES: Black nose, long ears that hang down, white coloring, sitting pose
+- ANATOMICAL ACCURACY: Head connects to body correctly, ears positioned properly
+- CHARACTERISTIC POSE: Snoopy sits upright, ears droop naturally
 
-ADVANCED TECHNIQUES:
-- Use hull() to create smooth connections between shapes
-- Use for loops to create arrays, patterns, or repetitive features
-- Create custom modules for complex reusable components
-- Use intersection() for precise shape cutting
-- Combine multiple primitives with union() for complex forms
-- Use mathematical functions (sin, cos) for organic curves
+ADVANCED OPENSCAD MASTERY:
+- Use hull() extensively to create smooth, organic transitions
+- Combine multiple spheres/ellipsoids with hull() for body shapes
+- Use scale() to create non-uniform shapes (oval heads, elongated snouts)
+- Apply minkowski() for rounded, organic edges
+- Create custom modules for complex body parts
+- Use rotate_extrude() for curved features
+- Employ intersection() for precise shape cutting
+- Use mathematical curves (sin, cos, bezier) for organic forms
 
-PRINTABILITY REQUIREMENTS:
-- Minimum wall thickness: 0.8mm
-- Avoid overhangs >45° without support
-- Maximum size: 200x200x200mm for Bambu A1 mini
-- Consider layer adhesion and print orientation
-- Add base/supports if needed for stability
+SOPHISTICATED MODELING APPROACH:
+Instead of basic cube + nose, create:
+- Multiple connected organic shapes using hull()
+- Proper anatomical proportions using scale()
+- Smooth transitions between body parts
+- Realistic features positioned correctly
+- Complex geometries that capture the essence
 
-CREATIVE FREEDOM:
-- You can model ANYTHING: animals, characters, vehicles, tools, art, mechanical parts
-- Think creatively about how to represent complex shapes in OpenSCAD
-- Use advanced boolean operations for detailed features
-- Don't limit yourself - push the boundaries of what's possible
+EXAMPLE ADVANCED TECHNIQUE for organic shapes:
+```openscad
+// Create organic body using multiple hulled spheres
+hull() {
+    translate([0,0,0]) sphere(r=10);
+    translate([0,15,5]) sphere(r=8);
+    translate([0,25,0]) sphere(r=6);
+}
+```
 
-OUTPUT FORMAT:
-1. Brief analysis of the object's structure and modeling approach
-2. Complete OpenSCAD code with extensive comments
-3. Key parameters for customization
-4. Print recommendations (orientation, supports, etc.)"""
+YOUR MISSION: Generate OpenSCAD code that creates something that actually LOOKS LIKE what was requested, not just a geometric approximation."""
 
-            user_prompt = f"""CREATE THIS 3D MODEL: {prompt}
+            user_prompt = f"""CREATE A RECOGNIZABLE 3D MODEL: {prompt}
 
-DESIGN CHALLENGE:
-Analyze this object and create detailed OpenSCAD code that accurately represents it. Think about:
-- What does this object actually look like in real life?
-- What are the proportions and key features?
-- How can I break it down into basic 3D shapes?
-- What boolean operations will create the right form?
-- How should it be oriented for 3D printing?
+CRITICAL REQUIREMENTS:
+The final result must be INSTANTLY RECOGNIZABLE as "{prompt}" - not just a geometric approximation.
 
-CREATIVE REQUIREMENTS:
-- Make it recognizable and accurate to the description
-- Use advanced OpenSCAD techniques for realism
-- Include fine details where appropriate
-- Ensure it's optimized for FDM 3D printing
-- Make key dimensions parametric for customization
+STEP-BY-STEP ANALYSIS:
+1. VISUALIZE: What does "{prompt}" actually look like? What makes it instantly recognizable?
+2. PROPORTIONS: What are the correct size relationships between different parts?
+3. KEY FEATURES: What specific details are essential for recognition?
+4. POSE/ORIENTATION: What position/angle best captures the character/object?
+5. ADVANCED GEOMETRY: How can I use hull(), scale(), rotate(), and other operations to create organic, realistic shapes?
 
-Be creative and push the limits of what's possible in OpenSCAD!"""
+MODELING STRATEGY:
+- Use hull() to connect multiple spheres/shapes for organic forms
+- Use scale() to create ovals, elongated shapes, proper proportions
+- Position features accurately using precise translate() coordinates
+- Create smooth transitions between body parts
+- Add characteristic details that make it recognizable
+
+EXAMPLES OF ADVANCED TECHNIQUES TO USE:
+- hull() multiple scaled spheres for body shapes
+- rotate_extrude() for curved features
+- minkowski() for organic rounding
+- intersection() for precise cuts
+- Custom modules for complex parts
+
+QUALITY STANDARD:
+If someone sees the 3D printed result, they should immediately say "That's a {prompt}!"
+Not "That's some geometric shapes that vaguely resemble {prompt}."
+
+Generate sophisticated OpenSCAD code that creates an ACTUALLY RECOGNIZABLE "{prompt}" using advanced geometric techniques."""
 
             logger.info(f"Generating unlimited 3D model for prompt: {prompt}")
 

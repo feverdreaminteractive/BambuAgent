@@ -842,15 +842,22 @@
 
                 // Look for main geometric operations
                 let insideDifference = false;
+                let insideHull = false;
                 let mainShapes = [];
                 let subtractShapes = [];
+                let hullShapes = [];
 
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i].trim();
 
-                    // Track if we're inside a difference() operation
+                    // Track if we're inside operations
                     if (line.includes('difference()') || line.includes('difference() {')) {
                         insideDifference = true;
+                        continue;
+                    }
+
+                    if (line.includes('hull()') || line.includes('hull() {')) {
+                        insideHull = true;
                         continue;
                     }
 
