@@ -17,11 +17,9 @@
     </style>
 
     <!-- Three.js for 3D preview -->
-    <!-- OpenSCAD WASM for true OpenSCAD rendering -->
-    <script src="https://unpkg.com/@jscad/openscad-openjscad-translator@2.5.1/dist/web/index.js"></script>
-    <script src="https://unpkg.com/@jscad/modeling@2.12.0/dist/web/jscad-modeling.min.js"></script>
-    <script src="https://unpkg.com/@jscad/io@2.3.13/dist/web/jscad-io.min.js"></script>
-    <script src="https://unpkg.com/@jscad/regl-renderer@2.6.1/dist/web/jscad-regl-renderer.min.js"></script>
+    <!-- Three.js for reliable 3D rendering -->
+    <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.150.0/examples/js/controls/OrbitControls.js"></script>
 
     <!-- Custom CSS -->
     <style>
@@ -735,8 +733,8 @@
                 }, 5000);
             }
 
-            async generate3DPreview(openscadCode) {
-                console.log('Generating OpenSCAD preview for:', openscadCode);
+            generate3DPreview(openscadCode) {
+                console.log('Generating 3D preview for:', openscadCode);
 
                 try {
                     const container = document.getElementById('threejs-preview');
@@ -751,28 +749,27 @@
                         container.style.minHeight = '256px';
                     }
 
+                    // Check if Three.js is loaded
+                    if (typeof THREE === 'undefined') {
+                        this.showCodePreview(container, openscadCode);
+                        return;
+                    }
+
                     // Show loading state
                     container.innerHTML = `
                         <div class="absolute inset-0 flex items-center justify-center text-gray-400">
                             <div class="text-center">
                                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto mb-2"></div>
-                                <div class="text-sm">Rendering OpenSCAD...</div>
-                                <div class="text-xs text-gray-500 mt-1">Using JSCAD Engine</div>
+                                <div class="text-sm">Parsing OpenSCAD...</div>
+                                <div class="text-xs text-gray-500 mt-1">Interpreting generated model</div>
                             </div>
                         </div>
                     `;
 
-                    // Try JSCAD OpenSCAD translator
-                    if (typeof jscad !== 'undefined' && jscad.openscadOpenJscadTranslator) {
-                        setTimeout(() => {
-                            this.renderWithJSCAD(container, openscadCode);
-                        }, 100);
-                    } else {
-                        // Fallback to showing the code with syntax highlighting
-                        setTimeout(() => {
-                            this.showCodePreview(container, openscadCode);
-                        }, 100);
-                    }
+                    // Parse and render with delay to show loading
+                    setTimeout(() => {
+                        this.parseAndRenderOpenSCAD(container, openscadCode);
+                    }, 100);
 
                 } catch (error) {
                     console.error('Preview generation error:', error);
@@ -780,54 +777,216 @@
                 }
             }
 
-            async renderWithJSCAD(container, openscadCode) {
+            parseAndRenderOpenSCAD(container, openscadCode) {
                 try {
-                    console.log('Attempting JSCAD OpenSCAD rendering...');
-
-                    // Check if JSCAD modules are available
-                    if (typeof jscad === 'undefined' || !jscad.openscadOpenJscadTranslator) {
-                        console.log('JSCAD not fully loaded, falling back to code display');
-                        this.showCodePreview(container, openscadCode);
-                        return;
-                    }
+                    console.log('Parsing OpenSCAD code...');
 
                     // Clear container
                     container.innerHTML = '';
 
-                    // Create canvas for rendering
-                    const canvas = document.createElement('canvas');
-                    canvas.width = container.clientWidth || 400;
-                    canvas.height = container.clientHeight || 256;
-                    canvas.style.width = '100%';
-                    canvas.style.height = '100%';
-                    container.appendChild(canvas);
+                    // Parse the OpenSCAD code for shapes and operations
+                    const shapes = this.parseAdvancedOpenSCAD(openscadCode);
+                    console.log('Parsed shapes:', shapes);
 
-                    // Try to translate and render OpenSCAD
-                    const jscadCode = jscad.openscadOpenJscadTranslator.translate(openscadCode);
-                    console.log('Translated to JSCAD:', jscadCode.slice(0, 200) + '...');
+                    if (!shapes || shapes.length === 0) {
+                        console.warn('No shapes found, showing code preview');
+                        this.showCodePreview(container, openscadCode);
+                        return;
+                    }
 
-                    // Execute the JSCAD code to get geometry
-                    const func = new Function('return (' + jscadCode + ')')();
-                    const geometry = func();
-
-                    // Setup renderer
-                    const renderer = jscad.reglRenderer({
-                        container: canvas,
-                        camera: {
-                            position: [50, 50, 50],
-                            target: [0, 0, 0]
-                        }
-                    });
-
-                    // Render the geometry
-                    renderer.render(geometry);
-
-                    console.log('JSCAD rendering completed successfully');
+                    // Create Three.js scene
+                    this.renderThreeJSScene(container, shapes);
 
                 } catch (error) {
-                    console.error('JSCAD rendering failed:', error);
+                    console.error('Parse and render error:', error);
                     this.showCodePreview(container, openscadCode);
                 }
+            }
+
+            parseAdvancedOpenSCAD(code) {
+                console.log('Advanced OpenSCAD parsing...');
+                const shapes = [];
+                const lines = code.split('\n');
+
+                // Extract variables with better pattern matching
+                const variables = {};
+                for (let line of lines) {
+                    line = line.trim();
+                    // Match various variable patterns
+                    const varMatch = line.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([0-9.]+);/);
+                    if (varMatch) {
+                        variables[varMatch[1]] = parseFloat(varMatch[2]);
+                    }
+                }
+
+                console.log('Found variables:', variables);
+
+                // Look for main geometric operations
+                let insideDifference = false;
+                let mainShapes = [];
+                let subtractShapes = [];
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+
+                    // Track if we're inside a difference() operation
+                    if (line.includes('difference()') || line.includes('difference() {')) {
+                        insideDifference = true;
+                        continue;
+                    }
+
+                    // Parse cubes
+                    const cubeMatch = line.match(/cube\s*\(\s*\[\s*([^,]+),\s*([^,]+),\s*([^\]]+)\]/);
+                    if (cubeMatch) {
+                        const shape = {
+                            type: 'cube',
+                            size: [
+                                this.resolveValue(cubeMatch[1], variables),
+                                this.resolveValue(cubeMatch[2], variables),
+                                this.resolveValue(cubeMatch[3], variables)
+                            ],
+                            center: line.includes('center=true')
+                        };
+
+                        // Check for transforms on this shape
+                        if (i > 0) {
+                            const prevLine = lines[i-1].trim();
+                            const translateMatch = prevLine.match(/translate\s*\(\s*\[\s*([^,]+),\s*([^,]+),\s*([^\]]+)\]/);
+                            if (translateMatch) {
+                                shape.position = [
+                                    this.resolveValue(translateMatch[1], variables),
+                                    this.resolveValue(translateMatch[2], variables),
+                                    this.resolveValue(translateMatch[3], variables)
+                                ];
+                            }
+                        }
+
+                        if (insideDifference && mainShapes.length > 0) {
+                            shape.isSubtraction = true;
+                            subtractShapes.push(shape);
+                        } else {
+                            mainShapes.push(shape);
+                        }
+                    }
+
+                    // Parse spheres
+                    const sphereMatch = line.match(/sphere\s*\(\s*r\s*=\s*([^)]+)\)/);
+                    if (sphereMatch) {
+                        const shape = {
+                            type: 'sphere',
+                            radius: this.resolveValue(sphereMatch[1], variables)
+                        };
+
+                        // Check for transforms
+                        if (i > 0) {
+                            const prevLine = lines[i-1].trim();
+                            const translateMatch = prevLine.match(/translate\s*\(\s*\[\s*([^,]+),\s*([^,]+),\s*([^\]]+)\]/);
+                            if (translateMatch) {
+                                shape.position = [
+                                    this.resolveValue(translateMatch[1], variables),
+                                    this.resolveValue(translateMatch[2], variables),
+                                    this.resolveValue(translateMatch[3], variables)
+                                ];
+                            }
+                        }
+
+                        if (insideDifference && mainShapes.length > 0) {
+                            shape.isSubtraction = true;
+                            subtractShapes.push(shape);
+                        } else {
+                            mainShapes.push(shape);
+                        }
+                    }
+
+                    // Parse cylinders
+                    const cylinderMatch = line.match(/cylinder\s*\(\s*r\s*=\s*([^,]+),\s*h\s*=\s*([^)]+)\)/);
+                    if (cylinderMatch) {
+                        const shape = {
+                            type: 'cylinder',
+                            radius: this.resolveValue(cylinderMatch[1], variables),
+                            height: this.resolveValue(cylinderMatch[2], variables),
+                            center: line.includes('center=true')
+                        };
+
+                        // Check for transforms
+                        if (i > 0) {
+                            const prevLine = lines[i-1].trim();
+                            const translateMatch = prevLine.match(/translate\s*\(\s*\[\s*([^,]+),\s*([^,]+),\s*([^\]]+)\]/);
+                            if (translateMatch) {
+                                shape.position = [
+                                    this.resolveValue(translateMatch[1], variables),
+                                    this.resolveValue(translateMatch[2], variables),
+                                    this.resolveValue(translateMatch[3], variables)
+                                ];
+                            }
+
+                            const rotateMatch = prevLine.match(/rotate\s*\(\s*\[\s*([^,]+),\s*([^,]+),\s*([^\]]+)\]/);
+                            if (rotateMatch) {
+                                shape.rotation = [
+                                    this.resolveValue(rotateMatch[1], variables),
+                                    this.resolveValue(rotateMatch[2], variables),
+                                    this.resolveValue(rotateMatch[3], variables)
+                                ];
+                            }
+                        }
+
+                        if (insideDifference && mainShapes.length > 0) {
+                            shape.isSubtraction = true;
+                            subtractShapes.push(shape);
+                        } else {
+                            mainShapes.push(shape);
+                        }
+                    }
+                }
+
+                // Combine main shapes and mark subtractions
+                const allShapes = [...mainShapes, ...subtractShapes];
+
+                // Apply different colors for main vs subtracted shapes
+                mainShapes.forEach(shape => {
+                    shape.color = 0x00D4AA; // Teal for main shapes
+                });
+
+                subtractShapes.forEach(shape => {
+                    shape.color = 0x333333; // Dark for subtracted areas
+                    shape.opacity = 0.3;
+                });
+
+                console.log('Parsed', mainShapes.length, 'main shapes and', subtractShapes.length, 'subtractions');
+                return allShapes;
+            }
+
+            resolveValue(valueStr, variables) {
+                if (!valueStr) return 0;
+
+                const trimmed = valueStr.trim();
+
+                // Direct variable lookup
+                if (variables[trimmed] !== undefined) {
+                    return variables[trimmed];
+                }
+
+                // Handle expressions like "base_height/2"
+                const divMatch = trimmed.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*\/\s*([0-9.]+)/);
+                if (divMatch && variables[divMatch[1]] !== undefined) {
+                    return variables[divMatch[1]] / parseFloat(divMatch[2]);
+                }
+
+                // Handle expressions like "base_width + 5"
+                const addMatch = trimmed.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*\+\s*([0-9.]+)/);
+                if (addMatch && variables[addMatch[1]] !== undefined) {
+                    return variables[addMatch[1]] + parseFloat(addMatch[2]);
+                }
+
+                // Handle expressions like "base_width - 5"
+                const subMatch = trimmed.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*-\s*([0-9.]+)/);
+                if (subMatch && variables[subMatch[1]] !== undefined) {
+                    return variables[subMatch[1]] - parseFloat(subMatch[2]);
+                }
+
+                // Fallback to parsing as number
+                const num = parseFloat(trimmed);
+                return isNaN(num) ? 10 : num; // Default fallback
             }
 
             showCodePreview(container, openscadCode) {
