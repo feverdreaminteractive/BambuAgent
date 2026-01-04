@@ -1721,30 +1721,23 @@
                     // Generate STL with proper Bambu Studio parameters
                     const stlResult = await this.generateSTLForBambuStudio(openscadCode, bambuConfig);
 
-                    if (stlResult.success) {
-                        // Create a proper 3MF project file for Bambu Studio
-                        const projectResult = await this.createBambuStudioProject(stlResult.stlData, filename, bambuConfig);
-
-                        if (projectResult.success) {
-                            // Download the 3MF project file (Bambu Studio's native format)
-                            this.downloadBlob(projectResult.projectData, `${filename}.3mf`, 'application/octet-stream');
-                            this.showBambuStudioInstructions(filename, '3mf', bambuConfig);
-                        } else {
-                            // Fall back to STL download
-                            this.downloadSTL(stlResult.stlData, `${filename}.stl`);
-                            this.showBambuStudioInstructions(filename, 'stl', bambuConfig);
-                        }
-                    } else {
-                        // Fall back to .scad file with instructions
-                        this.downloadOpenSCAD(openscadCode, `${filename}.scad`);
-                        this.showBambuStudioInstructions(filename, 'scad', bambuConfig);
+                    if (!stlResult.success) {
+                        throw new Error('STL generation failed: ' + stlResult.error);
                     }
+
+                    const projectResult = await this.createBambuStudioProject(stlResult.stlData, filename, bambuConfig);
+
+                    if (!projectResult.success) {
+                        throw new Error('3MF creation failed: ' + projectResult.error);
+                    }
+
+                    // Download the 3MF project file (Bambu Studio's native format)
+                    this.downloadBlob(projectResult.projectData, `${filename}.3mf`, 'application/octet-stream');
+                    this.showBambuStudioInstructions(filename, '3mf', bambuConfig);
 
                 } catch (error) {
                     console.error('Error preparing for Bambu Studio:', error);
-                    // Fall back to .scad download
-                    this.downloadOpenSCAD(openscadCode, `${filename}.scad`);
-                    this.showBambuStudioInstructions(filename, 'scad', null);
+                    this.showNotification(`Error: ${error.message}`, 'error');
                 }
             }
 
@@ -2139,6 +2132,7 @@
                 const base64PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
                 return atob(base64PNG);
             }
+
 
             generateUUID() {
                 return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
