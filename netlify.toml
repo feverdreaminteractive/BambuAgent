@@ -1,15 +1,2 @@
 [build]
-  base = ""
   publish = "web"
-  command = "echo 'Static site ready'"
-  ignore = "exit 0"
-
-[build.environment]
-  NODE_VERSION = "18"
-  DISABLE_DEPENDENCY_INSTALL = "true"
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
