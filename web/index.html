@@ -490,34 +490,69 @@
                 }
 
                 this.setGenerating(true);
-                this.updateStatusIndicator('generation', 'loading', 'Generating...');
+                this.updateStatusIndicator('generation', 'loading', 'Generating ultra-sophisticated model...');
 
                 try {
-                    const response = await fetch(`${this.apiUrl}/generate`, {
+                    // Use Netlify function for enhanced AI generation
+                    const response = await fetch('/.netlify/functions/enhance-openscad', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            prompt: prompt,
-                            user_id: 'web_user'
+                            prompt: prompt
                         })
                     });
 
                     const data = await response.json();
-                    console.log('API Response:', data); // Debug logging
+                    console.log('Enhanced AI Response:', data); // Debug logging
 
-                    if (response.ok) {
-                        this.displayResults(data);
+                    if (response.ok && data.success) {
+                        // Transform response to match expected format
+                        const transformedData = {
+                            openscad_code: data.openscadCode,
+                            explanation: data.explanation,
+                            sophisticationLevel: data.sophisticationLevel,
+                            generatedBy: data.generatedBy
+                        };
+
+                        this.displayResults(transformedData);
                         this.updateStatusIndicator('generation', 'connected', 'Complete');
-                        this.showNotification('Model generated successfully!', 'success');
+                        this.showNotification(`Ultra-sophisticated model generated! (${data.sophisticationLevel})`, 'success');
                     } else {
-                        throw new Error(data.detail || 'Generation failed');
+                        throw new Error(data.error || 'Enhanced generation failed');
                     }
                 } catch (error) {
-                    console.error('Generation error:', error);
-                    this.updateStatusIndicator('generation', 'error', 'Failed');
-                    this.showNotification(`Generation failed: ${error.message}`, 'error');
+                    console.error('Enhanced generation error:', error);
+
+                    // Fallback to Railway backend if Netlify function fails
+                    console.log('Falling back to Railway backend...');
+                    try {
+                        const fallbackResponse = await fetch(`${this.apiUrl}/generate`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                prompt: prompt,
+                                user_id: 'web_user'
+                            })
+                        });
+
+                        const fallbackData = await fallbackResponse.json();
+
+                        if (fallbackResponse.ok) {
+                            this.displayResults(fallbackData);
+                            this.updateStatusIndicator('generation', 'connected', 'Complete (Fallback)');
+                            this.showNotification('Model generated successfully using fallback!', 'success');
+                        } else {
+                            throw new Error(fallbackData.detail || 'Fallback generation failed');
+                        }
+                    } catch (fallbackError) {
+                        console.error('Fallback generation also failed:', fallbackError);
+                        this.updateStatusIndicator('generation', 'error', 'Failed');
+                        this.showNotification(`Generation failed: ${error.message}`, 'error');
+                    }
                 } finally {
                     this.setGenerating(false);
                 }
@@ -621,6 +656,18 @@
                     <div class="bg-gray-800 rounded-lg p-4">
                         <h4 class="font-semibold mb-2 text-blue-400">Explanation</h4>
                         <p class="text-gray-300">${this.escapeHtml(data.explanation)}</p>
+                        ${data.sophisticationLevel ? `
+                            <div class="mt-3 flex items-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    Sophistication: ${data.sophisticationLevel}
+                                </span>
+                                ${data.generatedBy ? `
+                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        ${data.generatedBy}
+                                    </span>
+                                ` : ''}
+                            </div>
+                        ` : ''}
                     </div>
 
                     ${data.estimatedPrintTime ? `
@@ -796,30 +843,94 @@
                 }
             }
 
-            parseAndRenderOpenSCAD(container, openscadCode) {
+            async parseAndRenderOpenSCAD(container, openscadCode) {
                 try {
-                    console.log('Parsing OpenSCAD code...');
+                    console.log('Rendering with TRUE OpenSCAD...');
 
-                    // Clear container
-                    container.innerHTML = '';
+                    // Clear container and show real rendering status
+                    container.innerHTML = `
+                        <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                            <div class="text-center">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto mb-2"></div>
+                                <div class="text-sm">Rendering with OpenSCAD Engine...</div>
+                                <div class="text-xs text-gray-500 mt-1">True 3D compilation in progress</div>
+                            </div>
+                        </div>
+                    `;
 
-                    // Parse the OpenSCAD code for shapes and operations
-                    const shapes = this.parseAdvancedOpenSCAD(openscadCode);
-                    console.log('Parsed shapes:', shapes);
+                    try {
+                        // Use Netlify function for TRUE OpenSCAD rendering
+                        const response = await fetch('/.netlify/functions/render-openscad', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                openscadCode: openscadCode,
+                                format: 'png'  // Get PNG preview for display
+                            })
+                        });
 
-                    if (!shapes || shapes.length === 0) {
-                        console.warn('No shapes found, showing code preview');
-                        this.showCodePreview(container, openscadCode);
-                        return;
+                        const result = await response.json();
+
+                        if (result.success && result.data) {
+                            // Display the TRUE OpenSCAD rendered image
+                            container.innerHTML = `
+                                <div class="w-full h-full flex items-center justify-center bg-gray-900">
+                                    <img src="${result.data}"
+                                         alt="OpenSCAD Rendered Preview"
+                                         class="max-w-full max-h-full object-contain"
+                                         style="image-rendering: -webkit-optimize-contrast;">
+                                    <div class="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                                        TRUE OpenSCAD
+                                    </div>
+                                </div>
+                            `;
+                            console.log('TRUE OpenSCAD rendering completed successfully!');
+
+                        } else {
+                            throw new Error(result.details || 'OpenSCAD rendering failed');
+                        }
+
+                    } catch (netlifyError) {
+                        console.log('Netlify function failed, falling back to Three.js approximation...');
+                        console.error('Netlify error:', netlifyError);
+
+                        // Fallback to Three.js approximation
+                        await this.renderThreeJSFallback(container, openscadCode);
                     }
 
-                    // Create Three.js scene
-                    this.renderThreeJSScene(container, shapes);
-
                 } catch (error) {
-                    console.error('Parse and render error:', error);
+                    console.error('Rendering error:', error);
                     this.showCodePreview(container, openscadCode);
                 }
+            }
+
+            async renderThreeJSFallback(container, openscadCode) {
+                console.log('Using Three.js fallback approximation...');
+
+                container.innerHTML = `
+                    <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                        <div class="text-center">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
+                            <div class="text-sm">Three.js Approximation...</div>
+                            <div class="text-xs text-gray-500 mt-1">Fallback preview</div>
+                        </div>
+                    </div>
+                `;
+
+                // Parse the OpenSCAD code for shapes and operations
+                const shapes = this.parseAdvancedOpenSCAD(openscadCode);
+                console.log('Parsed shapes for fallback:', shapes);
+
+                if (!shapes || shapes.length === 0) {
+                    console.warn('No shapes found, showing code preview');
+                    this.showCodePreview(container, openscadCode);
+                    return;
+                }
+
+                // Create Three.js scene with fallback indicator
+                this.renderThreeJSScene(container, shapes, true);
             }
 
             parseAdvancedOpenSCAD(code) {
@@ -1701,7 +1812,7 @@
                 return shapes;
             }
 
-            renderThreeJSScene(container, shapes) {
+            renderThreeJSScene(container, shapes, isFallback = false) {
                 // Set up Three.js scene
                 const scene = new THREE.Scene();
 

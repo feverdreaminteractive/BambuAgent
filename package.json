@@ -1,0 +1,12 @@
+{
+  "name": "bambu-agent",
+  "version": "1.0.0",
+  "description": "AI-powered 3D printing pipeline for Bambu A1 mini",
+  "dependencies": {
+    "openscad": "^1.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "build": "echo 'Build complete'"
+  }
+}
