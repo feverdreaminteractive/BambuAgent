@@ -831,13 +831,44 @@
                 const shapes = [];
                 const lines = code.split('\n');
 
-                // Extract variables first
+                // Extract variables first (enhanced for template variables)
                 const variables = {};
                 for (let line of lines) {
                     line = line.trim();
-                    const varMatch = line.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([0-9.]+);/);
+                    // Handle various variable formats including template variables
+                    const varMatch = line.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([0-9.]+|true|false);/);
                     if (varMatch) {
-                        variables[varMatch[1]] = parseFloat(varMatch[2]);
+                        const value = varMatch[2];
+                        variables[varMatch[1]] = value === 'true' ? true : value === 'false' ? false : parseFloat(value);
+                    }
+                }
+
+                // Extract module definitions to understand structure
+                const modules = {};
+                let currentModule = null;
+                let braceDepth = 0;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+
+                    // Detect module definitions
+                    const moduleMatch = line.match(/module\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+                    if (moduleMatch) {
+                        currentModule = moduleMatch[1];
+                        modules[currentModule] = { lines: [], startLine: i };
+                        continue;
+                    }
+
+                    if (currentModule) {
+                        modules[currentModule].lines.push(line);
+                        // Track braces to know when module ends
+                        braceDepth += (line.match(/{/g) || []).length;
+                        braceDepth -= (line.match(/}/g) || []).length;
+
+                        if (braceDepth <= 0) {
+                            currentModule = null;
+                            braceDepth = 0;
+                        }
                     }
                 }
 
@@ -881,8 +912,62 @@
                     return isNaN(num) ? 0 : num;
                 };
 
+                // Enhanced parsing with better fallback intelligence
+                let hasComplexOperations = false;
+                let detectedType = 'unknown';
+
+                // Analyze code for theme-based hints and complex operations
+                if (code.includes('hull()') || code.includes('difference()') || code.includes('union()')) {
+                    hasComplexOperations = true;
+                }
+
+                // Detect likely model type from content
+                if (code.includes('rounded_cube') || code.includes('wall_thickness') || code.includes('tolerance')) {
+                    detectedType = 'functional';
+                } else if (code.includes('decorative_base') || code.includes('ornament') || code.includes('figurine')) {
+                    detectedType = 'decorative';
+                } else if (code.includes('bearing') || code.includes('gear') || code.includes('clearance')) {
+                    detectedType = 'mechanical';
+                } else if (code.includes('smooth_surface') || code.includes('food_safe')) {
+                    detectedType = 'household';
+                } else if (code.includes('safe_rounded_edge') || code.includes('child_safe')) {
+                    detectedType = 'toy';
+                }
+
+                console.log('Detected type:', detectedType, 'Complex operations:', hasComplexOperations);
+                console.log('Found modules:', Object.keys(modules));
+
                 for (let line of lines) {
                     line = line.trim();
+
+                    // Skip module definitions and comments
+                    if (line.startsWith('module ') || line.startsWith('//') || line === '' || line === '}') {
+                        continue;
+                    }
+
+                    // Parse module calls (simple heuristic)
+                    const moduleCallMatch = line.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+                    if (moduleCallMatch && modules[moduleCallMatch[1]]) {
+                        console.log('Found module call:', moduleCallMatch[1]);
+                        // For module calls, create a representative shape based on the module name
+                        if (moduleCallMatch[1].includes('cube') || moduleCallMatch[1].includes('box')) {
+                            shapes.push({
+                                type: 'cube',
+                                size: [20, 20, 20],
+                                center: true,
+                                moduleCall: true
+                            });
+                        } else if (moduleCallMatch[1].includes('base') || moduleCallMatch[1].includes('cylinder')) {
+                            shapes.push({
+                                type: 'cylinder',
+                                height: 5,
+                                radius: 15,
+                                center: true,
+                                moduleCall: true
+                            });
+                        }
+                        continue;
+                    }
 
                     // Parse sphere with variable support (r= or d= syntax)
                     const sphereMatch = line.match(/sphere\s*\(\s*(?:(?:r\s*=\s*([a-zA-Z0-9_./*\s]+))|(?:d\s*=\s*([a-zA-Z0-9_./*\s]+)))/);
@@ -972,8 +1057,112 @@
                     }
                 }
 
+                // Theme-based intelligent fallback for complex models
+                if (shapes.length === 0 && hasComplexOperations) {
+                    console.log('Complex operations detected, generating theme-based fallback...');
+
+                    // Create theme-appropriate representative shapes
+                    switch (detectedType) {
+                        case 'functional':
+                            // Functional items often have box-like shapes with holes
+                            shapes.push({
+                                type: 'cube',
+                                size: [variables.length || 50, variables.width || 30, variables.height || 20],
+                                center: true,
+                                color: 0x4a90e2 // Blue for functional
+                            });
+                            if (variables.wall_thickness) {
+                                shapes.push({
+                                    type: 'cube',
+                                    size: [(variables.length || 50) - (variables.wall_thickness * 2),
+                                           (variables.width || 30) - (variables.wall_thickness * 2),
+                                           (variables.height || 20) - 2],
+                                    center: true,
+                                    color: 0x333333, // Dark for hollow space
+                                    position: [0, 0, 2]
+                                });
+                            }
+                            break;
+
+                        case 'decorative':
+                            // Decorative items often have a base and ornamental features
+                            shapes.push({
+                                type: 'cylinder',
+                                height: variables.base_height || 5,
+                                radius: 20,
+                                center: true,
+                                color: 0x8b7355 // Brown base
+                            });
+                            shapes.push({
+                                type: 'sphere',
+                                radius: 15,
+                                position: [0, 0, 15],
+                                color: 0xe74c3c // Red decorative element
+                            });
+                            break;
+
+                        case 'mechanical':
+                            // Mechanical parts often have cylindrical features
+                            shapes.push({
+                                type: 'cylinder',
+                                height: 20,
+                                radius: variables.bearing_tolerance || 10,
+                                center: true,
+                                color: 0x95a5a6 // Gray metallic
+                            });
+                            if (variables.clearance) {
+                                shapes.push({
+                                    type: 'cylinder',
+                                    height: 22,
+                                    radius: (variables.bearing_tolerance || 10) - variables.clearance,
+                                    center: true,
+                                    color: 0x34495e // Darker gray for clearance
+                                });
+                            }
+                            break;
+
+                        case 'household':
+                            // Household items are often box-like with smooth surfaces
+                            shapes.push({
+                                type: 'cube',
+                                size: [40, 30, 25],
+                                center: true,
+                                color: 0x2ecc71 // Green for household
+                            });
+                            break;
+
+                        case 'toy':
+                            // Toys often have rounded, safe shapes
+                            shapes.push({
+                                type: 'sphere',
+                                radius: variables.min_feature_size || 15,
+                                color: 0xf39c12 // Orange for toys
+                            });
+                            shapes.push({
+                                type: 'cylinder',
+                                height: 10,
+                                radius: 20,
+                                center: true,
+                                position: [0, 0, -15],
+                                color: 0xe67e22 // Orange base
+                            });
+                            break;
+
+                        default:
+                            // Unknown type - create a generic representative shape
+                            shapes.push({
+                                type: 'cube',
+                                size: [25, 25, 25],
+                                center: true,
+                                color: 0x9b59b6 // Purple for unknown
+                            });
+                    }
+
+                    console.log(`Generated ${detectedType} theme fallback with ${shapes.length} shapes`);
+                }
+
                 // Enhanced content analysis for complex models
-                if (shapes.length <= 1) {
+                if (shapes.length <= 1 && !hasComplexOperations) {
                     console.log('Running enhanced content analysis...');
 
                     // Look for any numeric values that might represent dimensions
