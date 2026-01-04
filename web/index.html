@@ -345,6 +345,32 @@
                         this.generateModel();
                     }
                 });
+
+                // Event delegation for dynamically generated buttons
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('bambu-studio-btn') || e.target.closest('.bambu-studio-btn')) {
+                        const button = e.target.classList.contains('bambu-studio-btn') ? e.target : e.target.closest('.bambu-studio-btn');
+                        console.log('Bambu Studio button clicked');
+                        const code = button.dataset.code.replace(/&#39;/g, "'");
+                        const filename = button.dataset.filename;
+                        this.openWithBambuStudio(code, filename);
+                    }
+
+                    if (e.target.classList.contains('download-scad-btn') || e.target.closest('.download-scad-btn')) {
+                        const button = e.target.classList.contains('download-scad-btn') ? e.target : e.target.closest('.download-scad-btn');
+                        console.log('Download SCAD button clicked');
+                        const code = button.dataset.code.replace(/&#39;/g, "'");
+                        const filename = button.dataset.filename;
+                        this.downloadOpenSCAD(code, filename);
+                    }
+
+                    if (e.target.classList.contains('copy-code-btn') || e.target.closest('.copy-code-btn')) {
+                        const button = e.target.classList.contains('copy-code-btn') ? e.target : e.target.closest('.copy-code-btn');
+                        console.log('Copy button clicked');
+                        const code = button.dataset.code.replace(/&#39;/g, "'");
+                        this.copyToClipboard(code);
+                    }
+                });
             }
 
             loadSettings() {
@@ -690,24 +716,26 @@
                     </div>` : ''}
 
                     <div class="flex flex-wrap gap-3">
-                        <button onclick="console.log('Copy button clicked'); window.bambuAgent.copyToClipboard('${this.escapeHtml(data.openscad_code).replace(/'/g, "\\\'")}')"
-                                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md text-white font-medium flex items-center">
+                        <button class="copy-code-btn px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md text-white font-medium flex items-center"
+                                data-code='${this.escapeHtml(data.openscad_code).replace(/'/g, "&#39;")}'>
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
                             Copy Code
                         </button>
 
-                        <button onclick="console.log('Bambu Studio button clicked'); window.bambuAgent.openWithBambuStudio('${this.escapeHtml(data.openscad_code).replace(/'/g, "\\\'")}', '${this.generateFilename()}')"
-                                class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-md text-white font-medium flex items-center">
+                        <button class="bambu-studio-btn px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-md text-white font-medium flex items-center"
+                                data-code='${this.escapeHtml(data.openscad_code).replace(/'/g, "&#39;")}'
+                                data-filename="${this.generateFilename()}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
                             </svg>
                             Open with Bambu Studio
                         </button>
 
-                        <button onclick="console.log('Download button clicked'); window.bambuAgent.downloadOpenSCAD('${this.escapeHtml(data.openscad_code).replace(/'/g, "\\\'")}', '${this.generateFilename()}.scad')"
-                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-medium flex items-center">
+                        <button class="download-scad-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-medium flex items-center"
+                                data-code='${this.escapeHtml(data.openscad_code).replace(/'/g, "&#39;")}'
+                                data-filename="${this.generateFilename()}.scad">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
