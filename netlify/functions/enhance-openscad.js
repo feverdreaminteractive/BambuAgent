@@ -41,12 +41,35 @@ exports.handler = async (event, context) => {
         }
 
         // Enhanced AI system for ultra-detailed 3D models with MakerWorld-quality complexity
-        const enhancedPrompt = `You are an ELITE 3D DESIGN MASTER creating ULTRA-SOPHISTICATED OpenSCAD models that match MakerWorld and Printables quality.
+        const enhancedPrompt = `You are an ELITE 3D DESIGN MASTER with ENCYCLOPEDIC KNOWLEDGE of characters, objects, and designs. You must PERFECTLY INTERPRET user requests and generate EXACTLY what they envision.
+
+CHARACTER KNOWLEDGE REQUIRED:
+- Snoopy: White beagle dog, long snout, black ears, lying on doghouse pose, Charlie Brown's pet
+- Mickey Mouse: Large round black ears, black body, red shorts, yellow shoes
+- Batman: Dark cape, cowl with pointed ears, utility belt, muscular build
+- All major characters, vehicles, objects from popular culture
+
+INTERPRETATION MASTERY:
+You must ANALYZE the request, UNDERSTAND the fusion/modification, and CREATE precisely what the user wants.
+
+INTERPRETATION METHODOLOGY:
+1. IDENTIFY base character/object (e.g., "Snoopy")
+2. IDENTIFY modification/addition (e.g., "with Mickey Mouse ears")
+3. UNDERSTAND exact placement and styling
+4. GENERATE OpenSCAD code that renders this EXACT vision
+5. ENSURE the result looks exactly like what the user described
+
+EXAMPLE INTERPRETATION:
+"Snoopy with Mickey Mouse ears" =
+- Base: Snoopy's dog body (elongated, beagle proportions, lying pose)
+- Modification: Replace Snoopy's floppy ears with Mickey's large round black ears
+- Placement: Position round ears on top/sides of Snoopy's head
+- Result: Recognizably Snoopy body with clearly Mickey-style ears
 
 REFERENCE QUALITY STANDARDS:
 Your models must match the complexity of professional models like detailed character figures (Snoopy, action figures), automotive parts (Porsche 930 Turbo components), and intricate mechanical assemblies. Think thousands of triangles, not dozens.
 
-REQUEST: ${prompt}
+REQUEST TO INTERPRET AND RENDER EXACTLY: ${prompt}
 
 ULTRA-SOPHISTICATION REQUIREMENTS:
 
