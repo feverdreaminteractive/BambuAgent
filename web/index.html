@@ -753,6 +753,30 @@
                         container.style.minHeight = '256px';
                     }
 
+                    // Wait a moment for any style changes to apply
+                    setTimeout(() => {
+                        this.continuePreviewGeneration(container, openscadCode);
+                    }, 100);
+
+                } catch (error) {
+                    console.error('3D Preview error:', error);
+                    const container = document.getElementById('threejs-preview');
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                                <div class="text-center">
+                                    <div class="text-red-400 mb-2">⚠️</div>
+                                    <div class="text-sm">3D Preview error</div>
+                                    <div class="text-xs text-gray-500 mt-1">${error.message}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            continuePreviewGeneration(container, openscadCode) {
+                try {
                     // Check if Three.js is loaded
                     if (typeof THREE === 'undefined') {
                         console.error('Three.js not loaded');
@@ -774,21 +798,32 @@
                     const shapes = this.parseOpenSCAD(openscadCode);
                     console.log('Parsed shapes:', shapes);
 
-                    this.renderThreeJSScene(container, shapes);
-                } catch (error) {
-                    console.error('3D Preview error:', error);
-                    const container = document.getElementById('threejs-preview');
-                    if (container) {
+                    if (!shapes || shapes.length === 0) {
+                        console.error('No shapes parsed');
                         container.innerHTML = `
                             <div class="absolute inset-0 flex items-center justify-center text-gray-400">
                                 <div class="text-center">
-                                    <div class="text-red-400 mb-2">⚠️</div>
-                                    <div class="text-sm">3D Preview error</div>
-                                    <div class="text-xs text-gray-500 mt-1">${error.message}</div>
+                                    <div class="text-yellow-400 mb-2">⚠️</div>
+                                    <div class="text-sm">No shapes found</div>
+                                    <div class="text-xs text-gray-500 mt-1">Complex OpenSCAD code</div>
                                 </div>
                             </div>
                         `;
+                        return;
                     }
+
+                    this.renderThreeJSScene(container, shapes);
+                } catch (error) {
+                    console.error('Continue preview error:', error);
+                    container.innerHTML = `
+                        <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                            <div class="text-center">
+                                <div class="text-red-400 mb-2">⚠️</div>
+                                <div class="text-sm">Preview generation error</div>
+                                <div class="text-xs text-gray-500 mt-1">${error.message}</div>
+                            </div>
+                        </div>
+                    `;
                 }
             }
 
@@ -948,6 +983,7 @@
 
                 // Fallback to default if still nothing
                 if (shapes.length === 0) {
+                    console.log('No shapes found, creating default cube');
                     shapes.push({
                         type: 'cube',
                         size: [20, 20, 20],
@@ -956,6 +992,16 @@
                 }
 
                 console.log('Final parsed shapes:', shapes);
+
+                // Extra safety check
+                if (!shapes || shapes.length === 0) {
+                    console.error('Shapes array is invalid, creating emergency fallback');
+                    return [{
+                        type: 'sphere',
+                        radius: 15
+                    }];
+                }
+
                 return shapes;
             }
 
