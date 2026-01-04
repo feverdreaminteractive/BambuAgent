@@ -730,7 +730,7 @@
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
                             </svg>
-                            Open with Bambu Studio
+                            Create 3MF File
                         </button>
 
                         <button class="download-scad-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-medium flex items-center"
@@ -1817,44 +1817,31 @@
             }
 
             async create3MFStructure(zip, stlData, filename, config) {
-                console.log('Creating Bambu Lab compatible 3MF structure...');
+                console.log('Creating Bambu Studio compatible 3MF structure...');
 
-                // 1. Create _rels/.rels file
-                zip.file('_rels/.rels', this.createBambuRelsFile());
+                // 1. Create _rels/.rels file (exact Bambu format)
+                zip.file('_rels/.rels', this.createRelsFile());
 
-                // 2. Create [Content_Types].xml for Bambu Lab
-                zip.file('[Content_Types].xml', this.createBambuContentTypesFile());
+                // 2. Create [Content_Types].xml (exact Bambu format)
+                zip.file('[Content_Types].xml', this.createContentTypesFile());
 
-                // 3. Create 3D folder structure like Bambu Lab
-                const threeDFolder = zip.folder('3D');
-                const objectsFolder = threeDFolder.folder('Objects');
-                const relsFolder = threeDFolder.folder('_rels');
+                // 3. Create 3D/3dmodel.model (references STL file)
+                zip.file('3D/3dmodel.model', this.create3DModelFile(filename, config));
 
-                // 4. Create main 3D model file
-                threeDFolder.file('3dmodel.model', this.createBambu3DModelFile(filename, config));
-
-                // 5. Create relationship file for 3D model
-                relsFolder.file('3dmodel.model.rels', this.createBambu3DModelRels());
-
-                // 6. Add STL data as object_1.model like Bambu Lab
+                // 4. Add STL file directly to 3D folder (like real Bambu files)
                 if (stlData) {
-                    console.log('Adding STL data as object_1.model');
-                    objectsFolder.file('object_1.model', stlData);
+                    console.log('Adding STL file to 3D folder');
+                    zip.file(`3D/${filename}.stl`, stlData);
                 }
 
-                // 7. Create Bambu Studio specific metadata
+                // 5. Add Bambu metadata files
                 const metadataFolder = zip.folder('Metadata');
-                metadataFolder.file('project_settings.config', this.createBambuProjectSettings(config));
-                metadataFolder.file('model_settings.config', this.createBambuModelSettings(config));
-                metadataFolder.file('slice_info.config', this.createBambuSliceInfo(config));
-                metadataFolder.file('cut_information.xml', this.createBambuCutInfo());
+                metadataFolder.file('auxiliary.xml', this.createAuxiliaryFile(config));
+                metadataFolder.file('project.xml', this.createProjectFile(filename));
+                metadataFolder.file('plate_1.xml', this.createPlateFile());
+                metadataFolder.file(`${filename}.xml`, this.createModelMetadataFile(filename));
 
-                // 8. Add basic thumbnails (simplified)
-                metadataFolder.file('plate_1.png', this.createBasicThumbnail());
-                metadataFolder.file('top_1.png', this.createBasicThumbnail());
-                metadataFolder.file('pick_1.png', this.createBasicThumbnail());
-
-                console.log('Bambu Lab 3MF structure created');
+                console.log('Bambu Studio 3MF structure created successfully');
             }
 
             createRelsFile() {
@@ -1875,33 +1862,15 @@
             }
 
             create3DModelFile(filename, config) {
-                const modelId = 1;
                 const objectId = 1;
-
                 return `<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06">
-    <metadata name="Application">BambuAgent</metadata>
-    <metadata name="Version">1.0.0</metadata>
-    <metadata name="CreationDate">${new Date().toISOString()}</metadata>
-    <metadata name="Designer">BambuAgent AI</metadata>
+    <metadata name="Application">BambuStudio</metadata>
+    <metadata name="Version">01.09.07.48</metadata>
 
     <resources>
-        <object id="${objectId}" name="${filename}" type="model">
-            <mesh>
-                <!-- Placeholder mesh - STL data will be referenced -->
-                <vertices>
-                    <vertex x="0" y="0" z="0"/>
-                    <vertex x="10" y="0" z="0"/>
-                    <vertex x="5" y="10" z="0"/>
-                    <vertex x="5" y="5" z="10"/>
-                </vertices>
-                <triangles>
-                    <triangle v1="0" v2="1" v3="2"/>
-                    <triangle v1="0" v2="2" v3="3"/>
-                    <triangle v1="0" v2="3" v3="1"/>
-                    <triangle v1="1" v2="3" v3="2"/>
-                </triangles>
-            </mesh>
+        <object id="${objectId}" name="${filename}" type="model" p:UUID="{${this.generateUUID()}}">
+            <!-- Reference to STL file in same 3D folder -->
         </object>
     </resources>
 
@@ -1909,6 +1878,39 @@
         <item objectid="${objectId}" transform="1 0 0 0 1 0 0 0 1 0 0 0" p:UUID="{${this.generateUUID()}}"/>
     </build>
 </model>`;
+            }
+
+            createProjectFile(filename) {
+                return `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <project>
+        <name>${filename}</name>
+        <created_time>${new Date().toISOString()}</created_time>
+        <modified_time>${new Date().toISOString()}</modified_time>
+    </project>
+</config>`;
+            }
+
+            createPlateFile() {
+                return `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <plate>
+        <plate_index>1</plate_index>
+        <name>Plate 1</name>
+        <locked>false</locked>
+    </plate>
+</config>`;
+            }
+
+            createModelMetadataFile(filename) {
+                return `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <model>
+        <name>${filename}</name>
+        <source>BambuAgent</source>
+        <printable>true</printable>
+    </model>
+</config>`;
             }
 
             createAuxiliaryFile(config) {
