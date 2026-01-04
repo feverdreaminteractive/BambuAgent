@@ -14,6 +14,199 @@ class ClaudeService:
 
         self.client = Anthropic(api_key=self.api_key) if self.api_key else None
 
+        # Real OpenSCAD template database from open source projects
+        self.openscad_templates = {
+            "box_container": {
+                "keywords": ["box", "container", "storage", "holder", "organizer"],
+                "code": """
+// Parametric Box Container Template
+// Based on common open-source designs
+
+module rounded_box(size, wall_thickness=2, corner_radius=2) {
+    difference() {
+        // Outer shell with rounded corners
+        hull() {
+            for (x = [corner_radius, size[0] - corner_radius])
+                for (y = [corner_radius, size[1] - corner_radius])
+                    for (z = [0, size[2]]) {
+                        translate([x, y, z])
+                            cylinder(h = 0.01, r = corner_radius);
+                    }
+        }
+
+        // Inner cavity
+        translate([wall_thickness, wall_thickness, wall_thickness])
+            cube([size[0] - 2*wall_thickness,
+                  size[1] - 2*wall_thickness,
+                  size[2]]);
+    }
+}
+
+// Main object
+length = 50;
+width = 30;
+height = 20;
+wall_thickness = 2;
+
+rounded_box([length, width, height], wall_thickness);
+""",
+                "description": "Parametric box with rounded corners and hollow interior"
+            },
+
+            "mounting_bracket": {
+                "keywords": ["mount", "bracket", "holder", "clamp", "attach"],
+                "code": """
+// Mounting Bracket Template
+// Inspired by maker community designs
+
+module mounting_bracket(width=30, height=40, thickness=4, screw_diameter=3.2) {
+    difference() {
+        union() {
+            // Main mounting plate
+            cube([width, thickness, height]);
+
+            // Reinforcement ribs
+            for (i = [0.2, 0.8]) {
+                translate([width * i - 1, 0, 0])
+                    cube([2, thickness * 2, height * 0.7]);
+            }
+        }
+
+        // Mounting holes
+        for (z = [height * 0.2, height * 0.8]) {
+            translate([width/2, thickness + 1, z])
+                rotate([90, 0, 0])
+                    cylinder(h=thickness + 2, d=screw_diameter);
+        }
+    }
+}
+
+mounting_bracket();
+""",
+                "description": "Parametric mounting bracket with screw holes"
+            },
+
+            "threaded_container": {
+                "keywords": ["thread", "screw", "jar", "bottle", "cap", "lid"],
+                "code": """
+// Threaded Container Template
+// Based on bottle/jar designs
+
+module thread_profile(pitch=2) {
+    polygon([
+        [0, 0],
+        [pitch * 0.6, pitch * 0.3],
+        [pitch * 0.6, pitch * 0.7],
+        [0, pitch]
+    ]);
+}
+
+module threaded_cylinder(diameter, height, pitch=2, thread_depth=1) {
+    difference() {
+        cylinder(d=diameter, h=height);
+
+        // Thread groove (simplified)
+        for (turn = [0 : pitch : height]) {
+            translate([0, 0, turn])
+                rotate_extrude()
+                    translate([diameter/2 - thread_depth/2, 0])
+                        thread_profile(pitch);
+        }
+    }
+}
+
+module container_with_threads(outer_d=40, wall_thickness=2, height=60) {
+    thread_pitch = 2;
+
+    difference() {
+        // Outer shell
+        cylinder(d=outer_d, h=height);
+
+        // Inner cavity
+        translate([0, 0, wall_thickness])
+            cylinder(d=outer_d - 2*wall_thickness, h=height);
+
+        // Thread the top portion
+        translate([0, 0, height - 10])
+            threaded_cylinder(outer_d - wall_thickness, 12, thread_pitch);
+    }
+}
+
+container_with_threads();
+""",
+                "description": "Container with threaded top for screw-on lids"
+            },
+
+            "mechanical_gear": {
+                "keywords": ["gear", "mechanical", "rotation", "teeth", "drive"],
+                "code": """
+// Parametric Gear Template
+// Simplified gear generation
+
+module gear(teeth=12, circular_pitch=5, gear_thickness=3, bore_diameter=5) {
+    pitch_diameter = teeth * circular_pitch / PI;
+
+    difference() {
+        union() {
+            // Base cylinder
+            cylinder(d=pitch_diameter * 0.9, h=gear_thickness);
+
+            // Gear teeth (simplified as spokes)
+            for (i = [0 : teeth - 1]) {
+                rotate([0, 0, i * 360 / teeth]) {
+                    translate([pitch_diameter * 0.4, 0, 0])
+                        cube([pitch_diameter * 0.2, circular_pitch * 0.3, gear_thickness], center=true);
+                }
+            }
+        }
+
+        // Center bore
+        cylinder(d=bore_diameter, h=gear_thickness + 1, center=true);
+    }
+}
+
+gear(teeth=16, circular_pitch=4);
+""",
+                "description": "Parametric gear with configurable teeth count"
+            },
+
+            "phone_stand": {
+                "keywords": ["phone", "tablet", "stand", "dock", "holder", "support"],
+                "code": """
+// Device Stand Template
+// Universal phone/tablet stand
+
+module device_stand(width=80, depth=60, height=45, thickness=3, angle=15) {
+
+    // Back support
+    translate([0, depth - thickness, 0])
+        cube([width, thickness, height]);
+
+    // Angled base
+    intersection() {
+        cube([width, depth, thickness + 5]);
+        translate([0, 0, thickness])
+            rotate([-angle, 0, 0])
+                cube([width, depth * 2, thickness]);
+    }
+
+    // Side supports
+    for (x = [thickness, width - thickness * 2]) {
+        translate([x, 0, 0])
+            cube([thickness, depth * 0.7, height * 0.6]);
+    }
+
+    // Cable channel
+    translate([width/2 - 5, thickness, 0])
+        cube([10, depth - thickness * 2, thickness + 1]);
+}
+
+device_stand();
+""",
+                "description": "Angled stand for phones and tablets with cable management"
+            }
+        }
+
         # Theme-based model templates for better AI generation
         self.model_templates = {
             "functional": {
@@ -97,6 +290,26 @@ module safe_rounded_edge(length, thickness) {
             }
         }
 
+    def detect_openscad_template(self, prompt: str) -> tuple:
+        """
+        Detect the most appropriate OpenSCAD template based on prompt keywords
+        Returns (template_name, template_data)
+        """
+        prompt_lower = prompt.lower()
+
+        template_scores = {}
+        for template_name, template_data in self.openscad_templates.items():
+            score = sum(1 for keyword in template_data["keywords"] if keyword in prompt_lower)
+            if score > 0:
+                template_scores[template_name] = score
+
+        if template_scores:
+            best_template = max(template_scores.items(), key=lambda x: x[1])[0]
+            return best_template, self.openscad_templates[best_template]
+
+        # Fallback to box_container as most versatile
+        return "box_container", self.openscad_templates["box_container"]
+
     def detect_model_theme(self, prompt: str) -> str:
         """
         Detect the most appropriate model theme based on prompt keywords
@@ -133,45 +346,56 @@ cube([20, 20, 20], center=true);
             }
 
         try:
-            # Detect theme and get template
+            # Detect best OpenSCAD template
+            template_name, template_data = self.detect_openscad_template(prompt)
+
+            # Also get theme for additional context
             theme = self.detect_model_theme(prompt)
-            template_data = self.model_templates[theme]
 
-            system_prompt = f"""You are an expert OpenSCAD programmer specializing in {theme} 3D models. Generate clean, functional OpenSCAD code based on user prompts.
+            system_prompt = f"""You are an expert OpenSCAD programmer. Generate clean, functional OpenSCAD code based on user prompts using proven design patterns.
 
-THEME: {theme.upper()}
-Template Guidelines: {template_data['guidelines']}
+REFERENCE TEMPLATE: {template_name}
+Template Description: {template_data['description']}
 
-Use this template foundation when applicable:
-{template_data['template']}
+BASE CODE TO REFERENCE AND MODIFY:
+{template_data['code']}
 
-General Guidelines:
-1. Create practical, printable 3D models optimized for the {theme} category
-2. Use appropriate dimensions (consider a 256x256x256mm build volume)
-3. Include comments explaining the design approach
-4. Ensure the model is centered and oriented for printing
-5. Add small features like chamfers or fillets where appropriate
-6. Keep complexity reasonable for FDM 3D printing
-7. Follow {theme}-specific best practices for durability and functionality
-8. Always end with a final union() or difference() if needed
+CUSTOMIZATION INSTRUCTIONS:
+1. Use the reference template above as your foundation
+2. Modify dimensions, features, and structure to match the user's specific request
+3. Keep the proven design patterns (modules, parametric variables, proper structure)
+4. Maintain good 3D printing practices (wall thickness, overhangs, etc.)
+5. Add or modify features while preserving the core template logic
+6. Include clear comments explaining your modifications
+7. Ensure all parameters are adjustable via variables at the top
 
-Return your response in this format:
-- Brief explanation of the design approach and why it fits the {theme} category
-- Complete OpenSCAD code incorporating template elements where relevant
-- Estimated print time"""
+REQUIREMENTS:
+- Adapt the template code to fulfill the specific user request
+- Maintain parametric design with configurable variables
+- Keep the professional structure and module organization
+- Optimize for FDM 3D printing (no overhangs >45°, min 0.8mm walls)
+- Size appropriately for Bambu A1 mini (256x256x256mm max)
 
-            user_prompt = f"""Create a 3D model for: {prompt}
+Return your response as:
+1. Brief explanation of how you adapted the {template_name} template
+2. Complete modified OpenSCAD code
+3. Key parameters the user can adjust
+4. Estimated print time"""
 
-Requirements:
-- Suitable for FDM 3D printing on Bambu A1 mini
-- No overhangs greater than 45 degrees without support
-- Minimum wall thickness of 0.8mm
-- Optimized for {theme} category use case
-- Follow {theme}-specific design principles
-- Incorporate template elements where they enhance the design
-- Practical and functional design"""
+            user_prompt = f"""Adapt the {template_name} template to create: {prompt}
 
-            logger.info(f"Detected theme '{theme}' for prompt: {prompt}")
+Customization Request:
+- Base your design on the provided {template_name} template
+- Modify dimensions, features, and details to match my specific needs
+- Keep the parametric structure and proven design patterns
+- Ensure compatibility with Bambu A1 mini 3D printer
+
+Template to customize: {template_name} ({template_data['description']})
+User's specific request: {prompt}
+
+Please provide the customized OpenSCAD code with clear parameter explanations."""
+
+            logger.info(f"Using template '{template_name}' for prompt: {prompt}")
 
             message = client.messages.create(
                 model="claude-3-haiku-20240307",

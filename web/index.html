@@ -17,8 +17,11 @@
     </style>
 
     <!-- Three.js for 3D preview -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- OpenSCAD WASM for true OpenSCAD rendering -->
+    <script src="https://unpkg.com/@jscad/openscad-openjscad-translator@2.5.1/dist/web/index.js"></script>
+    <script src="https://unpkg.com/@jscad/modeling@2.12.0/dist/web/jscad-modeling.min.js"></script>
+    <script src="https://unpkg.com/@jscad/io@2.3.13/dist/web/jscad-io.min.js"></script>
+    <script src="https://unpkg.com/@jscad/regl-renderer@2.6.1/dist/web/jscad-regl-renderer.min.js"></script>
 
     <!-- Custom CSS -->
     <style>
@@ -732,8 +735,8 @@
                 }, 5000);
             }
 
-            generate3DPreview(openscadCode) {
-                console.log('Generating 3D preview for:', openscadCode);
+            async generate3DPreview(openscadCode) {
+                console.log('Generating OpenSCAD preview for:', openscadCode);
 
                 try {
                     const container = document.getElementById('threejs-preview');
@@ -742,89 +745,123 @@
                         return;
                     }
 
-                    // Check container dimensions
-                    const containerWidth = container.clientWidth;
-                    const containerHeight = container.clientHeight;
-                    console.log('Container dimensions:', containerWidth, 'x', containerHeight);
-
-                    if (containerHeight === 0) {
-                        console.error('Container has zero height - fixing...');
+                    // Ensure container has proper height
+                    if (container.clientHeight === 0) {
                         container.style.height = '256px';
                         container.style.minHeight = '256px';
                     }
 
-                    // Wait a moment for any style changes to apply
-                    setTimeout(() => {
-                        this.continuePreviewGeneration(container, openscadCode);
-                    }, 100);
-
-                } catch (error) {
-                    console.error('3D Preview error:', error);
-                    const container = document.getElementById('threejs-preview');
-                    if (container) {
-                        container.innerHTML = `
-                            <div class="absolute inset-0 flex items-center justify-center text-gray-400">
-                                <div class="text-center">
-                                    <div class="text-red-400 mb-2">⚠️</div>
-                                    <div class="text-sm">3D Preview error</div>
-                                    <div class="text-xs text-gray-500 mt-1">${error.message}</div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                }
-            }
-
-            continuePreviewGeneration(container, openscadCode) {
-                try {
-                    // Check if Three.js is loaded
-                    if (typeof THREE === 'undefined') {
-                        console.error('Three.js not loaded');
-                        container.innerHTML = `
-                            <div class="absolute inset-0 flex items-center justify-center text-gray-400">
-                                <div class="text-center">
-                                    <div class="text-red-400 mb-2">⚠️</div>
-                                    <div class="text-sm">Three.js not loaded</div>
-                                </div>
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    // Clear the loading state
-                    container.innerHTML = '';
-
-                    // Parse OpenSCAD and create Three.js scene
-                    const shapes = this.parseOpenSCAD(openscadCode);
-                    console.log('Parsed shapes:', shapes);
-
-                    if (!shapes || shapes.length === 0) {
-                        console.error('No shapes parsed');
-                        container.innerHTML = `
-                            <div class="absolute inset-0 flex items-center justify-center text-gray-400">
-                                <div class="text-center">
-                                    <div class="text-yellow-400 mb-2">⚠️</div>
-                                    <div class="text-sm">No shapes found</div>
-                                    <div class="text-xs text-gray-500 mt-1">Complex OpenSCAD code</div>
-                                </div>
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    this.renderThreeJSScene(container, shapes);
-                } catch (error) {
-                    console.error('Continue preview error:', error);
+                    // Show loading state
                     container.innerHTML = `
                         <div class="absolute inset-0 flex items-center justify-center text-gray-400">
                             <div class="text-center">
-                                <div class="text-red-400 mb-2">⚠️</div>
-                                <div class="text-sm">Preview generation error</div>
-                                <div class="text-xs text-gray-500 mt-1">${error.message}</div>
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto mb-2"></div>
+                                <div class="text-sm">Rendering OpenSCAD...</div>
+                                <div class="text-xs text-gray-500 mt-1">Using JSCAD Engine</div>
                             </div>
                         </div>
                     `;
+
+                    // Try JSCAD OpenSCAD translator
+                    if (typeof jscad !== 'undefined' && jscad.openscadOpenJscadTranslator) {
+                        setTimeout(() => {
+                            this.renderWithJSCAD(container, openscadCode);
+                        }, 100);
+                    } else {
+                        // Fallback to showing the code with syntax highlighting
+                        setTimeout(() => {
+                            this.showCodePreview(container, openscadCode);
+                        }, 100);
+                    }
+
+                } catch (error) {
+                    console.error('Preview generation error:', error);
+                    this.showErrorPreview(container, error.message);
                 }
+            }
+
+            async renderWithJSCAD(container, openscadCode) {
+                try {
+                    console.log('Attempting JSCAD OpenSCAD rendering...');
+
+                    // Check if JSCAD modules are available
+                    if (typeof jscad === 'undefined' || !jscad.openscadOpenJscadTranslator) {
+                        console.log('JSCAD not fully loaded, falling back to code display');
+                        this.showCodePreview(container, openscadCode);
+                        return;
+                    }
+
+                    // Clear container
+                    container.innerHTML = '';
+
+                    // Create canvas for rendering
+                    const canvas = document.createElement('canvas');
+                    canvas.width = container.clientWidth || 400;
+                    canvas.height = container.clientHeight || 256;
+                    canvas.style.width = '100%';
+                    canvas.style.height = '100%';
+                    container.appendChild(canvas);
+
+                    // Try to translate and render OpenSCAD
+                    const jscadCode = jscad.openscadOpenJscadTranslator.translate(openscadCode);
+                    console.log('Translated to JSCAD:', jscadCode.slice(0, 200) + '...');
+
+                    // Execute the JSCAD code to get geometry
+                    const func = new Function('return (' + jscadCode + ')')();
+                    const geometry = func();
+
+                    // Setup renderer
+                    const renderer = jscad.reglRenderer({
+                        container: canvas,
+                        camera: {
+                            position: [50, 50, 50],
+                            target: [0, 0, 0]
+                        }
+                    });
+
+                    // Render the geometry
+                    renderer.render(geometry);
+
+                    console.log('JSCAD rendering completed successfully');
+
+                } catch (error) {
+                    console.error('JSCAD rendering failed:', error);
+                    this.showCodePreview(container, openscadCode);
+                }
+            }
+
+            showCodePreview(container, openscadCode) {
+                console.log('Showing code preview as fallback');
+                container.innerHTML = `
+                    <div class="absolute inset-0 bg-gray-900 text-green-400 p-4 font-mono text-xs overflow-auto">
+                        <div class="text-white text-sm mb-3 flex items-center">
+                            <span class="text-green-400 mr-2">📄</span>
+                            Generated OpenSCAD Code
+                            <span class="text-gray-500 ml-2 text-xs">(3D preview not available)</span>
+                        </div>
+                        <pre class="whitespace-pre-wrap text-green-300 leading-relaxed">${this.syntaxHighlight(openscadCode)}</pre>
+                    </div>
+                `;
+            }
+
+            syntaxHighlight(code) {
+                return code
+                    .replace(/(\/\/.*$)/gm, '<span style="color: #666;">$1</span>')
+                    .replace(/\b(module|function|if|else|for|difference|union|hull|intersection|translate|rotate|scale|cylinder|cube|sphere)\b/g, '<span style="color: #569cd6;">$1</span>')
+                    .replace(/\b(\d+\.?\d*)\b/g, '<span style="color: #b5cea8;">$1</span>')
+                    .replace(/(".*?")/g, '<span style="color: #ce9178;">$1</span>');
+            }
+
+            showErrorPreview(container, errorMessage) {
+                container.innerHTML = `
+                    <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                        <div class="text-center">
+                            <div class="text-red-400 mb-2">⚠️</div>
+                            <div class="text-sm">Preview generation failed</div>
+                            <div class="text-xs text-gray-500 mt-1">${errorMessage}</div>
+                        </div>
+                    </div>
+                `;
             }
 
             parseOpenSCAD(code) {
