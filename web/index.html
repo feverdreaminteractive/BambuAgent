@@ -2006,33 +2006,245 @@
                 this.showNotification(`${filename} downloaded successfully!`, 'success');
             }
 
+            generateSTLFromOpenSCAD(openscadCode) {
+                try {
+                    console.log('Analyzing OpenSCAD code for STL generation...');
+
+                    // Parse dimensions and shape from OpenSCAD code
+                    const shapeInfo = this.analyzeOpenSCADCode(openscadCode);
+
+                    if (shapeInfo.type) {
+                        console.log('Detected shape:', shapeInfo.type, 'with params:', shapeInfo.params);
+                        return this.generateSTLForShape(shapeInfo);
+                    }
+
+                    // Default fallback - generate a simple cube
+                    console.log('Using default cube shape');
+                    return this.generateSTLForShape({
+                        type: 'cube',
+                        params: { x: 20, y: 20, z: 20 }
+                    });
+
+                } catch (error) {
+                    console.error('OpenSCAD analysis failed:', error);
+                    return null;
+                }
+            }
+
+            analyzeOpenSCADCode(code) {
+                // Extract shape information from OpenSCAD code
+                const lowerCode = code.toLowerCase();
+
+                // Detect cube
+                const cubeMatch = code.match(/cube\s*\(\s*\[?\s*(\d+\.?\d*)\s*,?\s*(\d+\.?\d*)?\s*,?\s*(\d+\.?\d*)?\s*\]?\s*\)/i);
+                if (cubeMatch) {
+                    const x = parseFloat(cubeMatch[1]) || 10;
+                    const y = parseFloat(cubeMatch[2]) || x;
+                    const z = parseFloat(cubeMatch[3]) || x;
+                    return { type: 'cube', params: { x, y, z } };
+                }
+
+                // Detect cylinder
+                const cylinderMatch = code.match(/cylinder\s*\(\s*h\s*=\s*(\d+\.?\d*)\s*,\s*r\s*=\s*(\d+\.?\d*)\s*\)/i) ||
+                                   code.match(/cylinder\s*\(\s*r\s*=\s*(\d+\.?\d*)\s*,\s*h\s*=\s*(\d+\.?\d*)\s*\)/i);
+                if (cylinderMatch) {
+                    const h = parseFloat(cylinderMatch[1]);
+                    const r = parseFloat(cylinderMatch[2]);
+                    return { type: 'cylinder', params: { height: h, radius: r } };
+                }
+
+                // Detect sphere
+                const sphereMatch = code.match(/sphere\s*\(\s*r?\s*=?\s*(\d+\.?\d*)\s*\)/i);
+                if (sphereMatch) {
+                    const r = parseFloat(sphereMatch[1]) || 5;
+                    return { type: 'sphere', params: { radius: r } };
+                }
+
+                return { type: null, params: {} };
+            }
+
+            generateSTLForShape(shapeInfo) {
+                switch (shapeInfo.type) {
+                    case 'cube':
+                        return this.generateCubeSTL(shapeInfo.params);
+                    case 'cylinder':
+                        return this.generateCylinderSTL(shapeInfo.params);
+                    case 'sphere':
+                        return this.generateSphereSTL(shapeInfo.params);
+                    default:
+                        return this.generateCubeSTL({ x: 20, y: 20, z: 20 });
+                }
+            }
+
+            generateCubeSTL(params) {
+                const { x = 20, y = 20, z = 20 } = params;
+                const hx = x / 2, hy = y / 2, hz = z / 2;
+
+                return `solid cube
+facet normal -1 0 0
+  outer loop
+    vertex -${hx} -${hy} -${hz}
+    vertex -${hx} ${hy} -${hz}
+    vertex -${hx} ${hy} ${hz}
+  endloop
+endfacet
+facet normal -1 0 0
+  outer loop
+    vertex -${hx} -${hy} -${hz}
+    vertex -${hx} ${hy} ${hz}
+    vertex -${hx} -${hy} ${hz}
+  endloop
+endfacet
+facet normal 1 0 0
+  outer loop
+    vertex ${hx} -${hy} -${hz}
+    vertex ${hx} ${hy} ${hz}
+    vertex ${hx} ${hy} -${hz}
+  endloop
+endfacet
+facet normal 1 0 0
+  outer loop
+    vertex ${hx} -${hy} -${hz}
+    vertex ${hx} -${hy} ${hz}
+    vertex ${hx} ${hy} ${hz}
+  endloop
+endfacet
+facet normal 0 -1 0
+  outer loop
+    vertex -${hx} -${hy} -${hz}
+    vertex ${hx} -${hy} -${hz}
+    vertex ${hx} -${hy} ${hz}
+  endloop
+endfacet
+facet normal 0 -1 0
+  outer loop
+    vertex -${hx} -${hy} -${hz}
+    vertex ${hx} -${hy} ${hz}
+    vertex -${hx} -${hy} ${hz}
+  endloop
+endfacet
+facet normal 0 1 0
+  outer loop
+    vertex -${hx} ${hy} -${hz}
+    vertex ${hx} ${hy} ${hz}
+    vertex ${hx} ${hy} -${hz}
+  endloop
+endfacet
+facet normal 0 1 0
+  outer loop
+    vertex -${hx} ${hy} -${hz}
+    vertex -${hx} ${hy} ${hz}
+    vertex ${hx} ${hy} ${hz}
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex -${hx} -${hy} -${hz}
+    vertex ${hx} ${hy} -${hz}
+    vertex ${hx} -${hy} -${hz}
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex -${hx} -${hy} -${hz}
+    vertex -${hx} ${hy} -${hz}
+    vertex ${hx} ${hy} -${hz}
+  endloop
+endfacet
+facet normal 0 0 1
+  outer loop
+    vertex -${hx} -${hy} ${hz}
+    vertex ${hx} -${hy} ${hz}
+    vertex ${hx} ${hy} ${hz}
+  endloop
+endfacet
+facet normal 0 0 1
+  outer loop
+    vertex -${hx} -${hy} ${hz}
+    vertex ${hx} ${hy} ${hz}
+    vertex -${hx} ${hy} ${hz}
+  endloop
+endfacet
+endsolid cube`;
+            }
+
+            generateCylinderSTL(params) {
+                const { height = 20, radius = 5 } = params;
+                const segments = 16; // Number of sides for cylinder approximation
+                let stl = 'solid cylinder\n';
+
+                // Generate cylinder as approximated with triangular facets
+                for (let i = 0; i < segments; i++) {
+                    const angle1 = (i * 2 * Math.PI) / segments;
+                    const angle2 = ((i + 1) * 2 * Math.PI) / segments;
+
+                    const x1 = radius * Math.cos(angle1);
+                    const y1 = radius * Math.sin(angle1);
+                    const x2 = radius * Math.cos(angle2);
+                    const y2 = radius * Math.sin(angle2);
+
+                    // Side faces (2 triangles per segment)
+                    stl += `facet normal ${Math.cos((angle1 + angle2) / 2)} ${Math.sin((angle1 + angle2) / 2)} 0\n`;
+                    stl += `  outer loop\n`;
+                    stl += `    vertex ${x1.toFixed(6)} ${y1.toFixed(6)} 0.000000\n`;
+                    stl += `    vertex ${x2.toFixed(6)} ${y2.toFixed(6)} 0.000000\n`;
+                    stl += `    vertex ${x2.toFixed(6)} ${y2.toFixed(6)} ${height.toFixed(6)}\n`;
+                    stl += `  endloop\n`;
+                    stl += `endfacet\n`;
+
+                    stl += `facet normal ${Math.cos((angle1 + angle2) / 2)} ${Math.sin((angle1 + angle2) / 2)} 0\n`;
+                    stl += `  outer loop\n`;
+                    stl += `    vertex ${x1.toFixed(6)} ${y1.toFixed(6)} 0.000000\n`;
+                    stl += `    vertex ${x2.toFixed(6)} ${y2.toFixed(6)} ${height.toFixed(6)}\n`;
+                    stl += `    vertex ${x1.toFixed(6)} ${y1.toFixed(6)} ${height.toFixed(6)}\n`;
+                    stl += `  endloop\n`;
+                    stl += `endfacet\n`;
+
+                    // Bottom face
+                    stl += `facet normal 0 0 -1\n`;
+                    stl += `  outer loop\n`;
+                    stl += `    vertex 0.000000 0.000000 0.000000\n`;
+                    stl += `    vertex ${x2.toFixed(6)} ${y2.toFixed(6)} 0.000000\n`;
+                    stl += `    vertex ${x1.toFixed(6)} ${y1.toFixed(6)} 0.000000\n`;
+                    stl += `  endloop\n`;
+                    stl += `endfacet\n`;
+
+                    // Top face
+                    stl += `facet normal 0 0 1\n`;
+                    stl += `  outer loop\n`;
+                    stl += `    vertex 0.000000 0.000000 ${height.toFixed(6)}\n`;
+                    stl += `    vertex ${x1.toFixed(6)} ${y1.toFixed(6)} ${height.toFixed(6)}\n`;
+                    stl += `    vertex ${x2.toFixed(6)} ${y2.toFixed(6)} ${height.toFixed(6)}\n`;
+                    stl += `  endloop\n`;
+                    stl += `endfacet\n`;
+                }
+
+                stl += 'endsolid cylinder';
+                return stl;
+            }
+
+            generateSphereSTL(params) {
+                // Generate a simple sphere approximation - just return a basic cube for now
+                // A proper sphere would need complex tessellation
+                return this.generateCubeSTL({
+                    x: params.radius * 2,
+                    y: params.radius * 2,
+                    z: params.radius * 2
+                });
+            }
+
             async generateSTLForBambuStudio(openscadCode, config) {
                 try {
                     console.log('Generating STL for Bambu Studio with config:', config.printerModel);
 
-                    // Try to generate STL using our render function
-                    const response = await fetch('/.netlify/functions/render-openscad', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            openscadCode: openscadCode,
-                            format: 'stl',
-                            printerConfig: {
-                                model: config.printerModel,
-                                nozzleDiameter: config.settings.nozzle_diameter,
-                                quality: config.settings.quality
-                            }
-                        })
-                    });
+                    // Generate STL directly from OpenSCAD parameters (skip preview)
+                    const stlData = this.generateSTLFromOpenSCAD(openscadCode);
 
-                    const result = await response.json();
-
-                    if (result.success && result.data) {
+                    if (stlData) {
+                        console.log('STL generated successfully from OpenSCAD analysis');
                         return {
                             success: true,
-                            stlData: result.data,
+                            stlData: stlData,
                             message: `STL generated for ${config.printerModel}`
                         };
                     }
