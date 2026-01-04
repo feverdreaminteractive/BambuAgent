@@ -602,7 +602,7 @@
                 resultsContent.innerHTML = `
                     <div class="bg-gray-800 rounded-lg p-4">
                         <h4 class="font-semibold mb-2 text-purple-400">3D Preview</h4>
-                        <div id="threejs-preview" class="w-full h-64 bg-gray-900 rounded border border-gray-600 relative">
+                        <div id="threejs-preview" class="w-full bg-gray-900 rounded border border-gray-600 relative" style="height: 256px; min-height: 256px;">
                             <div class="absolute inset-0 flex items-center justify-center text-gray-400">
                                 <div class="text-center">
                                     <div class="animate-spin h-8 w-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto mb-2"></div>
@@ -742,6 +742,17 @@
                         return;
                     }
 
+                    // Check container dimensions
+                    const containerWidth = container.clientWidth;
+                    const containerHeight = container.clientHeight;
+                    console.log('Container dimensions:', containerWidth, 'x', containerHeight);
+
+                    if (containerHeight === 0) {
+                        console.error('Container has zero height - fixing...');
+                        container.style.height = '256px';
+                        container.style.minHeight = '256px';
+                    }
+
                     // Check if Three.js is loaded
                     if (typeof THREE === 'undefined') {
                         console.error('Three.js not loaded');
@@ -851,12 +862,24 @@
             renderThreeJSScene(container, shapes) {
                 // Set up Three.js scene
                 const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+
+                const width = container.clientWidth || 400;
+                const height = container.clientHeight || 256;
+
+                const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
                 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 
-                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setSize(width, height);
                 renderer.setClearColor(0x1a1a1a, 1);
+
+                // Ensure canvas has proper styling
+                renderer.domElement.style.width = '100%';
+                renderer.domElement.style.height = '100%';
+                renderer.domElement.style.display = 'block';
+
                 container.appendChild(renderer.domElement);
+
+                console.log('Canvas added to container, size:', width, 'x', height);
 
                 // Add lights
                 const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
@@ -918,6 +941,9 @@
 
                 console.log('Camera positioned at distance:', distance, 'maxDimension:', maxDimension);
 
+                // Render one frame immediately
+                renderer.render(scene, camera);
+
                 // Simple rotation animation (more reliable than OrbitControls)
                 const animate = () => {
                     requestAnimationFrame(animate);
@@ -926,7 +952,7 @@
                 };
                 animate();
 
-                console.log('3D preview setup complete');
+                console.log('3D preview setup complete, shapes in scene:', scene.children.length);
 
                 // Handle window resize
                 const handleResize = () => {
