@@ -408,45 +408,100 @@ translate([0, 0, base_thickness])
         offset(r = 2) circle(r = 20);
 ```
 
-YOUR MISSION: Transform any 2D concept, logo, artwork, or design into a sophisticated 3D model with proper depth, relief, and printable structure."""
+MAKERWORLD-STYLE DESIGN PATTERNS:
+Reference these proven successful 3D print approaches from MakerWorld.com:
 
-            user_prompt = f"""TRANSFORM THIS CONCEPT INTO A 3D MODEL: {prompt}
+**POPULAR CATEGORIES & TECHNIQUES:**
 
-ANALYZE THE REQUEST:
-Determine what type of 3D conversion this needs:
+🏠 **HOUSEHOLD/FUNCTIONAL** (Top category on MakerWorld):
+- Phone stands with 60-70° angle, cable management slots
+- Desk organizers with compartments and rounded corners
+- Wall hooks using mounting holes and reinforcement ribs
+- Kitchen tools with ergonomic handles and food-safe considerations
+- Cord management with snap-fit mechanisms
 
-🎨 **2D→3D CONVERSION** (logos, artwork, flat designs):
-- Create layered relief with proper depth hierarchy
-- Use linear_extrude() for base shapes
-- Add raised/recessed elements for visual impact
-- Consider embossed text and fine details
+🎮 **GAMING/TOYS** (Highly popular):
+- Miniature figures with removable bases for painting
+- Board game organizers with precise compartment sizing
+- Dice towers with internal baffles and collection areas
+- Gaming accessories with clip-on mechanisms
 
-🎭 **CHARACTER/OBJECT CREATION** (figures, animals, items):
-- Build recognizable 3D forms using advanced geometry
-- Focus on accurate proportions and key identifying features
-- Use hull(), scale(), rotate() for organic shapes
-- Create detailed, printable representations
+🎨 **DECORATIVE/ART** (Community favorites):
+- Lithophanes using variable thickness for light transmission
+- Vases using spiral or geometric patterns
+- Holiday decorations with intricate lattice work
+- Wall art using layered relief techniques (2-5mm depth)
 
-⚙️ **FUNCTIONAL DESIGN** (tools, mechanical parts, containers):
-- Prioritize functionality and engineering requirements
-- Include proper tolerances and fit considerations
-- Add mounting points, handles, or operational features
-- Ensure structural integrity for intended use
+🔧 **TOOLS/MECHANICAL** (Engineering focused):
+- Socket organizers with graduated holes and labels
+- Jigs and fixtures with precise tolerances (±0.1mm)
+- Replacement parts with mounting compatibility
+- Custom tool handles with ergonomic grip patterns
 
-🏗️ **ARCHITECTURAL/STRUCTURAL** (buildings, frameworks):
-- Create stable, proportionally correct structures
-- Include architectural details and realistic features
-- Consider scale and printability constraints
-- Add bases or foundations for stability
+**SUCCESSFUL DESIGN PRINCIPLES FROM MAKERWORLD:**
+- **Modular Design**: Parts that snap/screw together
+- **Print-in-Place**: Moving parts that print assembled
+- **Parametric Customization**: User-adjustable dimensions
+- **Material Efficiency**: Minimal support requirements
+- **Aesthetic Appeal**: Smooth surfaces, professional finish
+- **Functional Details**: Chamfers, fillets, draft angles
 
-UNIVERSAL REQUIREMENTS:
-✅ **Professional Quality**: Result must look intentional and well-designed
-✅ **Printability**: Optimized for FDM printing (proper overhangs, supports, layer adhesion)
-✅ **Detail Level**: Include fine details that enhance recognition/functionality
-✅ **Parametric Design**: Make key dimensions adjustable via variables
-✅ **Advanced Techniques**: Use sophisticated OpenSCAD operations for realism
+**PROVEN MAKERWORLD TECHNIQUES:**
+- Use 0.4mm+ wall thickness for strength
+- Include 45° chamfers on edges for professional look
+- Add small (0.2mm) fillets to prevent stress concentration
+- Design with 0.2mm layer height compatibility
+- Include mounting holes sized for M3/M4/M5 screws
+- Use tapered fits (0.1-0.2mm clearance) for moving parts
 
-GENERATE: Complete OpenSCAD code that creates a detailed, professional 3D model of "{prompt}" using the most appropriate conversion strategy."""
+YOUR MISSION: Create models that match the quality, functionality, and design sophistication found in top-rated MakerWorld designs."""
+
+            user_prompt = f"""CREATE A MAKERWORLD-QUALITY 3D PRINT: {prompt}
+
+MANDATORY DESIGN REQUIREMENTS:
+Create this model to look EXACTLY like top-rated MakerWorld prints with professional finish, precise engineering, and exceptional attention to detail.
+
+APPLY MAKERWORLD DESIGN DNA:
+
+🏗️ **STRUCTURAL EXCELLENCE**:
+- 2-3mm minimum wall thickness for durability
+- 45° chamfers on ALL external edges (0.5-1mm)
+- Small (0.2-0.5mm) fillets on internal corners
+- No sharp edges - everything professionally rounded
+- Reinforcement ribs where stress concentrates
+
+🎯 **PRECISION ENGINEERING**:
+- Screw holes sized exactly: M3=3.2mm, M4=4.2mm, M5=5.2mm
+- 0.1-0.2mm clearance for moving/fitting parts
+- Draft angles (1-2°) on vertical walls for easy printing
+- Snap-fit tolerances: 0.15mm for tight fit, 0.3mm for loose
+
+🎨 **MAKERWORLD AESTHETICS**:
+- Smooth, curved transitions using hull() and minkowski()
+- Geometric patterns or functional texture where appropriate
+- Professional branding area or subtle details
+- Clean, minimalist design language
+- Perfect surface finish considerations
+
+⚙️ **FUNCTIONAL INTEGRATION**:
+- Built-in mounting solutions (holes, slots, tabs)
+- Ergonomic considerations for user interaction
+- Cable management, storage, or organizational features
+- Print-in-place mechanisms where beneficial
+- Modular design for easy assembly/disassembly
+
+📐 **MAKERWORLD SIZING STANDARDS**:
+- Phone stands: 60-70° angle, 120x80mm base
+- Desk organizers: 5-10mm compartment walls
+- Wall mounts: Standard spacing for studs/screws
+- Tool holders: Size for common tool dimensions
+- Containers: Standard lid/gasket interfaces
+
+QUALITY BENCHMARK:
+The result must look like it was designed by a professional engineer, manufactured by a commercial company, and could be sold on MakerWorld as a top-rated design.
+
+USER REQUEST: "{prompt}"
+Generate OpenSCAD code that transforms this into a MakerWorld-caliber 3D print with commercial-grade quality and finish."""
 
             logger.info(f"Generating unlimited 3D model for prompt: {prompt}")
 
