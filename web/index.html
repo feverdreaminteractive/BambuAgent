@@ -872,33 +872,77 @@
                     }
                 }
 
-                // If no shapes found, try to infer from the code content
-                if (shapes.length === 0) {
-                    console.log('No shapes parsed directly, creating approximation...');
+                // Enhanced content analysis for complex models
+                if (shapes.length <= 1) {
+                    console.log('Running enhanced content analysis...');
 
                     // Look for any numeric values that might represent dimensions
                     const numbers = code.match(/([0-9.]+)/g);
                     if (numbers && numbers.length > 0) {
-                        const maxDimension = Math.max(...numbers.map(n => parseFloat(n)).filter(n => n > 0 && n < 200));
+                        const dimensions = numbers.map(n => parseFloat(n)).filter(n => n > 0 && n < 200);
+                        const maxDimension = Math.max(...dimensions);
+                        const avgDimension = dimensions.reduce((a, b) => a + b, 0) / dimensions.length;
 
-                        // Create a representative shape based on the content
-                        if (code.includes('sphere') || code.includes('head')) {
-                            shapes.push({
-                                type: 'sphere',
-                                radius: maxDimension || 25
-                            });
+                        console.log('Dimensions found:', dimensions, 'max:', maxDimension, 'avg:', avgDimension);
+
+                        // If we only have one shape, enhance it based on code analysis
+                        if (shapes.length === 1) {
+                            const mainShape = shapes[0];
+
+                            // Add additional features based on code content
+                            if (code.includes('keychain') || code.includes('loop')) {
+                                // Add keychain loop
+                                const loopRadius = variables.loop_radius || avgDimension * 0.15;
+                                const headRadius = variables.head_radius || mainShape.radius;
+                                shapes.push({
+                                    type: 'torus', // We'll render this as a thin cylinder
+                                    radius: loopRadius,
+                                    height: loopRadius * 0.5,
+                                    position: [0, 0, headRadius * 1.2],
+                                    color: 0x888888 // Different color for keychain part
+                                });
+                                console.log('Added keychain loop');
+                            }
+
+                            if (code.includes('eyes') || code.includes('face')) {
+                                // Add small spheres for eyes
+                                const eyeRadius = (variables.head_radius || mainShape.radius) * 0.15;
+                                const headRadius = variables.head_radius || mainShape.radius;
+                                shapes.push({
+                                    type: 'sphere',
+                                    radius: eyeRadius,
+                                    position: [headRadius * 0.4, headRadius * 0.2, headRadius * 0.4],
+                                    color: 0x333333
+                                });
+                                shapes.push({
+                                    type: 'sphere',
+                                    radius: eyeRadius,
+                                    position: [-headRadius * 0.4, headRadius * 0.2, headRadius * 0.4],
+                                    color: 0x333333
+                                });
+                                console.log('Added eyes');
+                            }
+                        }
+                        // If no shapes, create approximation
+                        else if (shapes.length === 0) {
+                            if (code.includes('sphere') || code.includes('head')) {
+                                shapes.push({
+                                    type: 'sphere',
+                                    radius: maxDimension || 25
+                                });
+                            }
+
+                            if (code.includes('cylinder') || code.includes('loop') || code.includes('keychain')) {
+                                shapes.push({
+                                    type: 'cylinder',
+                                    height: (maxDimension || 30) * 0.3,
+                                    radius: (maxDimension || 25) * 0.15,
+                                    position: [0, 0, maxDimension || 25]
+                                });
+                            }
                         }
 
-                        if (code.includes('cylinder') || code.includes('loop') || code.includes('keychain')) {
-                            shapes.push({
-                                type: 'cylinder',
-                                height: (maxDimension || 30) * 0.8,
-                                radius: (maxDimension || 25) * 0.3,
-                                position: [0, 0, maxDimension || 25]
-                            });
-                        }
-
-                        console.log('Created approximation with max dimension:', maxDimension);
+                        console.log('Enhanced analysis complete');
                     }
                 }
 
@@ -956,13 +1000,23 @@
 
                 // Add shapes to scene
                 let maxDimension = 0;
-                shapes.forEach(shape => {
+                shapes.forEach((shape, index) => {
                     let geometry, mesh;
+
+                    // Choose material based on shape color or default
+                    const shapeMaterial = shape.color
+                        ? new THREE.MeshPhongMaterial({
+                            color: shape.color,
+                            transparent: true,
+                            opacity: 0.9,
+                            shininess: 100
+                        })
+                        : material;
 
                     switch (shape.type) {
                         case 'cube':
                             geometry = new THREE.BoxGeometry(shape.size[0], shape.size[1], shape.size[2]);
-                            mesh = new THREE.Mesh(geometry, material);
+                            mesh = new THREE.Mesh(geometry, shapeMaterial);
                             if (!shape.center) {
                                 mesh.position.set(shape.size[0]/2, shape.size[1]/2, shape.size[2]/2);
                             }
@@ -970,31 +1024,30 @@
                             break;
 
                         case 'cylinder':
+                        case 'torus': // Render torus as thin cylinder for now
                             geometry = new THREE.CylinderGeometry(shape.radius, shape.radius, shape.height, 32);
-                            mesh = new THREE.Mesh(geometry, material);
+                            mesh = new THREE.Mesh(geometry, shapeMaterial);
                             if (!shape.center) {
                                 mesh.position.y = shape.height / 2;
-                            }
-                            // Apply custom position if specified
-                            if (shape.position) {
-                                mesh.position.set(shape.position[0], shape.position[1], shape.position[2]);
                             }
                             maxDimension = Math.max(maxDimension, shape.radius * 2, shape.height);
                             break;
 
                         case 'sphere':
                             geometry = new THREE.SphereGeometry(shape.radius, 32, 16);
-                            mesh = new THREE.Mesh(geometry, material);
-                            // Apply custom position if specified
-                            if (shape.position) {
-                                mesh.position.set(shape.position[0], shape.position[1], shape.position[2]);
-                            }
+                            mesh = new THREE.Mesh(geometry, shapeMaterial);
                             maxDimension = Math.max(maxDimension, shape.radius * 2);
                             break;
                     }
 
+                    // Apply custom position if specified
+                    if (mesh && shape.position) {
+                        mesh.position.set(shape.position[0], shape.position[1], shape.position[2]);
+                    }
+
                     if (mesh) {
                         scene.add(mesh);
+                        console.log(`Added ${shape.type} ${index + 1} to scene at position:`, shape.position || 'center');
                     }
                 });
 
