@@ -796,8 +796,55 @@
                 const shapes = [];
                 const lines = code.split('\n');
 
+                // Extract variables first
+                const variables = {};
                 for (let line of lines) {
                     line = line.trim();
+                    const varMatch = line.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([0-9.]+);/);
+                    if (varMatch) {
+                        variables[varMatch[1]] = parseFloat(varMatch[2]);
+                    }
+                }
+
+                console.log('Extracted variables:', variables);
+
+                // Function to resolve variable values
+                const resolveValue = (value) => {
+                    if (typeof value === 'string' && variables[value] !== undefined) {
+                        return variables[value];
+                    }
+                    return parseFloat(value) || value;
+                };
+
+                for (let line of lines) {
+                    line = line.trim();
+
+                    // Parse sphere with variable support
+                    const sphereMatch = line.match(/sphere\s*\(\s*(?:r\s*=\s*)?([a-zA-Z0-9_.]+)/);
+                    if (sphereMatch) {
+                        const radius = resolveValue(sphereMatch[1]);
+                        shapes.push({
+                            type: 'sphere',
+                            radius: radius
+                        });
+                        console.log('Found sphere with radius:', radius);
+                        continue;
+                    }
+
+                    // Parse cylinder with variable support
+                    const cylinderMatch = line.match(/cylinder\s*\(\s*(?:h\s*=\s*)?([a-zA-Z0-9_.]+)(?:\s*,\s*(?:r\s*=\s*)?([a-zA-Z0-9_.]+))?/);
+                    if (cylinderMatch) {
+                        const height = resolveValue(cylinderMatch[1]);
+                        const radius = cylinderMatch[2] ? resolveValue(cylinderMatch[2]) : 5;
+                        shapes.push({
+                            type: 'cylinder',
+                            height: height,
+                            radius: radius,
+                            center: line.includes('center=true') || line.includes('center = true')
+                        });
+                        console.log('Found cylinder with height:', height, 'radius:', radius);
+                        continue;
+                    }
 
                     // Parse cube([x, y, z])
                     const cubeMatch = line.match(/cube\s*\(\s*\[\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\]/);
@@ -807,47 +854,55 @@
                             size: [parseFloat(cubeMatch[1]), parseFloat(cubeMatch[2]), parseFloat(cubeMatch[3])],
                             center: line.includes('center=true') || line.includes('center = true')
                         });
+                        console.log('Found cube with size:', [parseFloat(cubeMatch[1]), parseFloat(cubeMatch[2]), parseFloat(cubeMatch[3])]);
                         continue;
                     }
 
-                    // Parse cube(size)
-                    const cubeSimpleMatch = line.match(/cube\s*\(\s*([0-9.]+)\s*\)/);
+                    // Parse cube(size) with variable support
+                    const cubeSimpleMatch = line.match(/cube\s*\(\s*([a-zA-Z0-9_.]+)\s*\)/);
                     if (cubeSimpleMatch) {
-                        const size = parseFloat(cubeSimpleMatch[1]);
+                        const size = resolveValue(cubeSimpleMatch[1]);
                         shapes.push({
                             type: 'cube',
                             size: [size, size, size],
                             center: line.includes('center=true') || line.includes('center = true')
                         });
+                        console.log('Found cube with size:', size);
                         continue;
-                    }
-
-                    // Parse cylinder(h=height, r=radius) or cylinder(h=height, d=diameter)
-                    const cylinderMatch = line.match(/cylinder\s*\(\s*h\s*=\s*([0-9.]+).*?(?:r\s*=\s*([0-9.]+)|d\s*=\s*([0-9.]+))/);
-                    if (cylinderMatch) {
-                        const height = parseFloat(cylinderMatch[1]);
-                        const radius = cylinderMatch[2] ? parseFloat(cylinderMatch[2]) : parseFloat(cylinderMatch[3]) / 2;
-                        shapes.push({
-                            type: 'cylinder',
-                            height: height,
-                            radius: radius,
-                            center: line.includes('center=true') || line.includes('center = true')
-                        });
-                        continue;
-                    }
-
-                    // Parse sphere(r=radius) or sphere(d=diameter)
-                    const sphereMatch = line.match(/sphere\s*\(\s*(?:r\s*=\s*([0-9.]+)|d\s*=\s*([0-9.]+))/);
-                    if (sphereMatch) {
-                        const radius = sphereMatch[1] ? parseFloat(sphereMatch[1]) : parseFloat(sphereMatch[2]) / 2;
-                        shapes.push({
-                            type: 'sphere',
-                            radius: radius
-                        });
                     }
                 }
 
-                // If no shapes found, create a default cube
+                // If no shapes found, try to infer from the code content
+                if (shapes.length === 0) {
+                    console.log('No shapes parsed directly, creating approximation...');
+
+                    // Look for any numeric values that might represent dimensions
+                    const numbers = code.match(/([0-9.]+)/g);
+                    if (numbers && numbers.length > 0) {
+                        const maxDimension = Math.max(...numbers.map(n => parseFloat(n)).filter(n => n > 0 && n < 200));
+
+                        // Create a representative shape based on the content
+                        if (code.includes('sphere') || code.includes('head')) {
+                            shapes.push({
+                                type: 'sphere',
+                                radius: maxDimension || 25
+                            });
+                        }
+
+                        if (code.includes('cylinder') || code.includes('loop') || code.includes('keychain')) {
+                            shapes.push({
+                                type: 'cylinder',
+                                height: (maxDimension || 30) * 0.8,
+                                radius: (maxDimension || 25) * 0.3,
+                                position: [0, 0, maxDimension || 25]
+                            });
+                        }
+
+                        console.log('Created approximation with max dimension:', maxDimension);
+                    }
+                }
+
+                // Fallback to default if still nothing
                 if (shapes.length === 0) {
                     shapes.push({
                         type: 'cube',
@@ -856,6 +911,7 @@
                     });
                 }
 
+                console.log('Final parsed shapes:', shapes);
                 return shapes;
             }
 
@@ -919,12 +975,20 @@
                             if (!shape.center) {
                                 mesh.position.y = shape.height / 2;
                             }
+                            // Apply custom position if specified
+                            if (shape.position) {
+                                mesh.position.set(shape.position[0], shape.position[1], shape.position[2]);
+                            }
                             maxDimension = Math.max(maxDimension, shape.radius * 2, shape.height);
                             break;
 
                         case 'sphere':
                             geometry = new THREE.SphereGeometry(shape.radius, 32, 16);
                             mesh = new THREE.Mesh(geometry, material);
+                            // Apply custom position if specified
+                            if (shape.position) {
+                                mesh.position.set(shape.position[0], shape.position[1], shape.position[2]);
+                            }
                             maxDimension = Math.max(maxDimension, shape.radius * 2);
                             break;
                     }
