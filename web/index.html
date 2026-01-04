@@ -2006,17 +2006,56 @@
                 this.showNotification(`${filename} downloaded successfully!`, 'success');
             }
 
-            generateSTLFromOpenSCAD(openscadCode) {
+            async generateSTLFromOpenSCAD(openscadCode) {
                 try {
-                    console.log('Interpreting user request from OpenSCAD code...');
+                    console.log('Using Claude AI to generate STL from OpenSCAD...');
                     console.log('OpenSCAD code length:', openscadCode.length, 'characters');
 
-                    // The AI has already interpreted the user's command
-                    // Now generate STL that matches what they actually wanted
-                    return this.interpretAndGenerateSTL(openscadCode);
+                    // Claude already created sophisticated OpenSCAD - now let Claude create the STL too
+                    const stlContent = await this.generateSTLWithClaude(openscadCode);
+
+                    if (stlContent) {
+                        return stlContent;
+                    }
+
+                    // Fallback if Claude conversion fails
+                    console.log('Using fallback STL generation');
+                    return this.generateComplexModelSTL();
 
                 } catch (error) {
                     console.error('STL generation failed:', error);
+                    return this.generateComplexModelSTL();
+                }
+            }
+
+            async generateSTLWithClaude(openscadCode) {
+                try {
+                    console.log('Asking Claude to convert OpenSCAD to STL...');
+
+                    // Use the enhance API to convert OpenSCAD to STL
+                    const response = await fetch('/.netlify/functions/convert-to-stl', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            openscadCode: openscadCode
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.stlContent) {
+                            console.log('Claude successfully generated STL');
+                            return result.stlContent;
+                        }
+                    }
+
+                    console.log('Claude STL conversion failed, using fallback');
+                    return this.generateComplexModelSTL();
+
+                } catch (error) {
+                    console.error('Claude STL conversion error:', error);
                     return this.generateComplexModelSTL();
                 }
             }
@@ -3101,8 +3140,8 @@ endfacet
                 try {
                     console.log('Generating STL for Bambu Studio with config:', config.printerModel);
 
-                    // Generate STL directly from OpenSCAD parameters (skip preview)
-                    const stlData = this.generateSTLFromOpenSCAD(openscadCode);
+                    // Generate STL directly from OpenSCAD parameters using Claude AI
+                    const stlData = await this.generateSTLFromOpenSCAD(openscadCode);
 
                     if (stlData) {
                         console.log('STL generated successfully from OpenSCAD analysis');
