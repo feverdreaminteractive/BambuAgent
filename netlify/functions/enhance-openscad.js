@@ -1,5 +1,3 @@
-const { Configuration, OpenAIApi } = require('openai');
-
 exports.handler = async (event, context) => {
     // Handle CORS
     const headers = {
