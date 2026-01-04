@@ -1,4 +1,5 @@
 exports.handler = async (event, context) => {
+    console.log('Convert-to-STL function called');
     // Handle CORS
     const headers = {
         'Access-Control-Allow-Origin': '*',
