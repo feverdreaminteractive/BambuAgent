@@ -40,45 +40,51 @@ exports.handler = async (event, context) => {
             };
         }
 
-        // Enhanced AI system for ultra-detailed 3D models
-        const enhancedPrompt = `You are an ELITE 3D DESIGN MASTER creating ULTRA-SOPHISTICATED OpenSCAD models.
+        // Enhanced AI system for ultra-detailed 3D models with MakerWorld-quality complexity
+        const enhancedPrompt = `You are an ELITE 3D DESIGN MASTER creating ULTRA-SOPHISTICATED OpenSCAD models that match MakerWorld and Printables quality.
 
-ULTRA-DETAIL REQUIREMENTS:
-Create a model so detailed and sophisticated that it rivals commercial CAD software output.
+REFERENCE QUALITY STANDARDS:
+Your models must match the complexity of professional models like detailed character figures (Snoopy, action figures), automotive parts (Porsche 930 Turbo components), and intricate mechanical assemblies. Think thousands of triangles, not dozens.
 
 REQUEST: ${prompt}
 
-MAXIMUM SOPHISTICATION STANDARDS:
-🔬 MICRO-DETAIL LEVEL:
-- Include 0.1-0.3mm fine surface textures and patterns
-- Add realistic wear patterns, tool marks, and manufacturing details
-- Create complex internal mechanisms and moving parts
-- Include precision-engineered tolerances and fits
-- Add professional branding, part numbers, and certification marks
+ULTRA-SOPHISTICATION REQUIREMENTS:
 
-🏗️ STRUCTURAL COMPLEXITY:
-- Multi-component assemblies with interacting parts
-- Advanced parametric patterns and mathematical curves
-- Complex boolean operations (difference, intersection, hull)
-- Organic transitions using bezier curves and splines
-- Variable wall thickness and stress-relief features
+🦾 ORGANIC COMPLEXITY (for characters/figures):
+- Generate 50+ spheres and cylinders for smooth organic shapes
+- Use hull() operations between 10+ objects for seamless body transitions
+- Create facial features with precise sphere/cylinder positioning
+- Add clothing details with complex extrusions and boolean operations
+- Include fine surface textures using minkowski() with small spheres
 
-🎨 PROFESSIONAL AESTHETICS:
-- CNC-machined surface finishes with tool marks
-- Knurled grips with diamond crosshatch patterns
-- Embossed logos and fine typography
-- Multi-level relief with 10+ depth variations
-- Aesthetic details like chamfers, fillets, and surface treatments
+🚗 MECHANICAL SOPHISTICATION (for automotive/technical):
+- Generate 100+ geometric components for complex assemblies
+- Use rotate_extrude() for circular/curved automotive features
+- Create intricate vent patterns with for() loop arrays
+- Add threaded features, mounting points, and precision slots
+- Include aerodynamic curves using complex mathematical functions
 
-ADVANCED OPENSCAD MASTERY:
-- Use for() loops for complex parametric arrays
-- Implement hull() for smooth organic transitions
-- Create custom modules for sophisticated components
-- Apply minkowski() for professional edge rounding
-- Use rotate_extrude() for threaded and curved features
-- Employ intersection() for precision manufacturing details
+🎯 ADVANCED OPENSCAD TECHNIQUES (MANDATORY):
+- Use for() loops to generate 20+ repeated elements
+- Implement hull() between multiple objects for smooth transitions
+- Create 5+ custom modules for complex sub-assemblies
+- Use intersection() and difference() for precision cutouts
+- Apply mathematical functions: sin(), cos(), sqrt() for curves
+- Generate parametric arrays with nested for() loops
 
-GENERATE: Complete OpenSCAD code with extreme detail level, professional manufacturing quality, and commercial-grade sophistication.`;
+🔥 EXTREME DETAIL LEVEL:
+- Minimum 200 lines of sophisticated OpenSCAD code
+- Include 50+ individual geometric operations
+- Create multi-level assemblies with 3+ depth layers
+- Add surface texturing with diamond patterns, knurling
+- Include precision mounting holes, slots, and mechanical features
+
+EXAMPLE COMPLEXITY TARGETS:
+- Character model: 100+ spheres/cylinders for smooth organic form
+- Automotive part: 200+ geometric operations with curved panels
+- Mechanical assembly: 150+ precision components with threaded features
+
+GENERATE: Ultra-sophisticated OpenSCAD code (200+ lines) with MakerWorld-level complexity and thousands of final triangles.`;
 
         // Make API call to Claude
         const response = await fetch('https://api.anthropic.com/v1/messages', {
