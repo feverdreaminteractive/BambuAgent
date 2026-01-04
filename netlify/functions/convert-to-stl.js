@@ -125,6 +125,7 @@ Generate the complete STL file that represents the exact model described in the 
 
     } catch (error) {
         console.error('STL conversion error:', error);
+        console.error('Error stack:', error.stack);
 
         return {
             statusCode: 500,
@@ -132,7 +133,8 @@ Generate the complete STL file that represents the exact model described in the 
             body: JSON.stringify({
                 success: false,
                 error: 'STL conversion failed',
-                details: error.message
+                details: error.message,
+                stack: error.stack
             })
         };
     }

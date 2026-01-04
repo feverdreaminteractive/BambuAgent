@@ -1837,7 +1837,7 @@
                 // 5. Add Bambu metadata files
                 const metadataFolder = zip.folder('Metadata');
                 metadataFolder.file('auxiliary.xml', this.createAuxiliaryFile(config));
-                metadataFolder.file('project.xml', this.createProjectFile(filename));
+                metadataFolder.file('project.xml', this.createProjectFile(filename, config));
                 metadataFolder.file('plate_1.xml', this.createPlateFile());
                 metadataFolder.file(`${filename}.xml`, this.createModelMetadataFile(filename));
 
@@ -1880,11 +1880,12 @@
 </model>`;
             }
 
-            createProjectFile(filename) {
+            createProjectFile(filename, config = {}) {
                 return `<?xml version="1.0" encoding="UTF-8"?>
 <config>
     <project>
         <name>${filename}</name>
+        <printer_model>${config?.printerModel || "Bambu Lab A1 mini"}</printer_model>
         <created_time>${new Date().toISOString()}</created_time>
         <modified_time>${new Date().toISOString()}</modified_time>
     </project>
