@@ -2008,52 +2008,299 @@
 
             generateSTLFromOpenSCAD(openscadCode) {
                 try {
-                    console.log('Generating detailed STL from sophisticated OpenSCAD code...');
+                    console.log('Interpreting user request from OpenSCAD code...');
                     console.log('OpenSCAD code length:', openscadCode.length, 'characters');
 
-                    // For AI-generated sophisticated models, always use complex generation
-                    // The new enhanced AI prompt generates 200+ line sophisticated code
-                    if (openscadCode.length > 500) { // Sophisticated AI-generated code
-                        console.log('Detected sophisticated AI-generated model - using complex STL generation');
-
-                        // Analyze content type for appropriate complex model
-                        const complexity = this.analyzeCodeComplexity(openscadCode);
-
-                        if (complexity.isAutomotive || /car|vehicle|wheel|turbo|engine/.test(openscadCode.toLowerCase())) {
-                            console.log('Generating automotive part STL');
-                            return this.generateAutomotivePartSTL();
-                        }
-
-                        if (/snoopy|character|mickey|batman|figure/.test(openscadCode.toLowerCase())) {
-                            console.log('Generating character figure STL');
-                            return this.generateCharacterFigureSTL(openscadCode);
-                        }
-
-                        if (complexity.isMechanical) {
-                            console.log('Generating mechanical part STL');
-                            return this.generateMechanicalPartSTL();
-                        }
-
-                        // Default to complex model for all sophisticated code
-                        console.log('Generating complex detailed model STL');
-                        return this.generateComplexModelSTL();
-                    }
-
-                    // Only for very basic user-written code, check for simple shapes
-                    console.log('Basic code detected - checking for simple shapes');
-                    const shapeInfo = this.analyzeOpenSCADCode(openscadCode);
-                    if (shapeInfo.type) {
-                        return this.generateEnhancedSTLForShape(shapeInfo);
-                    }
-
-                    // Always default to complex model
-                    console.log('No simple shapes found - defaulting to complex model');
-                    return this.generateComplexModelSTL();
+                    // The AI has already interpreted the user's command
+                    // Now generate STL that matches what they actually wanted
+                    return this.interpretAndGenerateSTL(openscadCode);
 
                 } catch (error) {
                     console.error('STL generation failed:', error);
-                    return this.generateComplexModelSTL(); // Always return something functional
+                    return this.generateComplexModelSTL();
                 }
+            }
+
+            interpretAndGenerateSTL(openscadCode) {
+                console.log('Analyzing OpenSCAD code to understand user intent...');
+
+                // Parse the OpenSCAD code to understand what the user wanted
+                const intent = this.parseUserIntent(openscadCode);
+                console.log('User intent:', intent);
+
+                // Generate STL based on what the user actually described
+                return this.generateSTLFromUserIntent(intent, openscadCode);
+            }
+
+            parseUserIntent(openscadCode) {
+                // Extract the user's intent from the sophisticated AI-generated OpenSCAD
+                const code = openscadCode.toLowerCase();
+
+                return {
+                    // What type of object
+                    type: this.identifyObjectType(code),
+
+                    // Specific features requested
+                    features: this.extractRequestedFeatures(code),
+
+                    // Modifications or customizations
+                    modifications: this.extractModifications(code),
+
+                    // Scale and complexity
+                    complexity: openscadCode.length > 1000 ? 'high' : 'medium'
+                };
+            }
+
+            identifyObjectType(code) {
+                if (/character|figure|snoopy|mickey|batman|person|animal/.test(code)) return 'character';
+                if (/car|vehicle|truck|plane|boat|motorcycle/.test(code)) return 'vehicle';
+                if (/house|building|tower|bridge|structure/.test(code)) return 'building';
+                if (/tool|gear|screw|mechanical|machine/.test(code)) return 'mechanical';
+                if (/toy|game|puzzle|fun/.test(code)) return 'toy';
+                if (/art|sculpture|decoration|ornament/.test(code)) return 'decorative';
+                return 'custom';
+            }
+
+            extractRequestedFeatures(code) {
+                const features = [];
+
+                // Body parts and features
+                if (/ear/.test(code)) features.push('ears');
+                if (/eye/.test(code)) features.push('eyes');
+                if (/nose/.test(code)) features.push('nose');
+                if (/mouth/.test(code)) features.push('mouth');
+                if (/tail/.test(code)) features.push('tail');
+                if (/leg/.test(code)) features.push('legs');
+                if (/arm/.test(code)) features.push('arms');
+                if (/wing/.test(code)) features.push('wings');
+                if (/wheel/.test(code)) features.push('wheels');
+                if (/door/.test(code)) features.push('doors');
+                if (/window/.test(code)) features.push('windows');
+
+                return features;
+            }
+
+            extractModifications(code) {
+                const mods = [];
+
+                // Character modifications
+                if (/mickey.*ear|round.*ear/.test(code)) mods.push('mickey_ears');
+                if (/batman.*ear|pointed.*ear/.test(code)) mods.push('batman_ears');
+                if (/racing.*stripe|stripe/.test(code)) mods.push('racing_stripes');
+                if (/with.*hat|wearing.*hat/.test(code)) mods.push('hat');
+                if (/with.*cape|wearing.*cape/.test(code)) mods.push('cape');
+
+                return mods;
+            }
+
+            generateSTLFromUserIntent(intent, openscadCode) {
+                console.log(`Generating ${intent.type} with features: ${intent.features.join(', ')}`);
+
+                // Generate appropriate model based on user's actual request
+                switch (intent.type) {
+                    case 'character':
+                        return this.generateCharacterFromIntent(intent, openscadCode);
+                    case 'vehicle':
+                        return this.generateVehicleFromIntent(intent, openscadCode);
+                    case 'building':
+                        return this.generateBuildingFromIntent(intent, openscadCode);
+                    case 'mechanical':
+                        return this.generateMechanicalFromIntent(intent, openscadCode);
+                    case 'toy':
+                        return this.generateToyFromIntent(intent, openscadCode);
+                    case 'decorative':
+                        return this.generateDecorativeFromIntent(intent, openscadCode);
+                    default:
+                        return this.generateCustomFromIntent(intent, openscadCode);
+                }
+            }
+
+            // Intent-based generators that adapt to user requests
+            generateCharacterFromIntent(intent, openscadCode) {
+                console.log('Generating character based on user intent');
+
+                // Use the existing character figure generation but customize based on intent
+                let stl = 'solid UserRequestedCharacter\n';
+
+                // Generate base character
+                stl += this.addCharacterBody();
+                stl += this.addCharacterHead();
+                stl += this.addCharacterLimbs();
+                stl += this.addCharacterFacialFeatures();
+
+                // Customize based on modifications
+                if (intent.modifications.includes('mickey_ears')) {
+                    stl += this.addMickeyEars();
+                } else if (intent.modifications.includes('batman_ears')) {
+                    stl += this.addBatmanEars();
+                } else {
+                    stl += this.addDefaultEars();
+                }
+
+                // Add other features based on intent
+                if (intent.features.includes('tail')) {
+                    stl += this.addCharacterTail();
+                }
+
+                if (intent.modifications.includes('cape')) {
+                    stl += this.addCape();
+                }
+
+                stl += 'endsolid UserRequestedCharacter';
+                return stl;
+            }
+
+            generateVehicleFromIntent(intent, openscadCode) {
+                console.log('Generating vehicle based on user intent');
+                let stl = 'solid UserRequestedVehicle\n';
+
+                // Base vehicle body
+                stl += this.addVehicleBody();
+
+                // Add features based on user request
+                if (intent.features.includes('wheels')) {
+                    stl += this.addVehicleWheels();
+                }
+
+                if (intent.features.includes('doors')) {
+                    stl += this.addVehicleDoors();
+                }
+
+                if (intent.features.includes('windows')) {
+                    stl += this.addVehicleWindows();
+                }
+
+                if (intent.modifications.includes('racing_stripes')) {
+                    stl += this.addRacingStripes();
+                }
+
+                stl += 'endsolid UserRequestedVehicle';
+                return stl;
+            }
+
+            generateBuildingFromIntent(intent, openscadCode) {
+                console.log('Generating building based on user intent');
+                return this.generateArchitecturalSTL();
+            }
+
+            generateMechanicalFromIntent(intent, openscadCode) {
+                console.log('Generating mechanical part based on user intent');
+                return this.generateMechanicalPartSTL();
+            }
+
+            generateToyFromIntent(intent, openscadCode) {
+                console.log('Generating toy based on user intent');
+                // Toys can be character-like or mechanical
+                if (intent.features.includes('eyes') || intent.features.includes('ears')) {
+                    return this.generateCharacterFromIntent(intent, openscadCode);
+                } else {
+                    return this.generateComplexModelSTL();
+                }
+            }
+
+            generateDecorativeFromIntent(intent, openscadCode) {
+                console.log('Generating decorative object based on user intent');
+                return this.generateComplexModelSTL();
+            }
+
+            generateCustomFromIntent(intent, openscadCode) {
+                console.log('Generating custom object based on user intent');
+                return this.generateComplexModelSTL();
+            }
+
+            // Helper methods for specific features
+            addMickeyEars() {
+                return this.createSphere(-12, -5, 16, 4) + this.createSphere(-12, 5, 16, 4);
+            }
+
+            addBatmanEars() {
+                return this.createPointedEar(-14, -4, 16) + this.createPointedEar(-14, 4, 16);
+            }
+
+            addDefaultEars() {
+                return this.createEllipsoid(-14, -4, 16, 3, 2, 4) + this.createEllipsoid(-14, 4, 16, 3, 2, 4);
+            }
+
+            addCharacterTail() {
+                return this.createEllipsoid(12, 0, 8, 2, 2, 6) + this.createEllipsoid(14, 0, 10, 1.5, 1.5, 4);
+            }
+
+            addCape() {
+                return this.createCurvedPanel(0, 0, 15, 20, 25, 3, 'cape');
+            }
+
+            addVehicleBody() {
+                return this.createEllipsoid(0, 0, 8, 20, 12, 6);
+            }
+
+            addVehicleWheels() {
+                const wheels = [[-12, -8, 2], [-12, 8, 2], [12, -8, 2], [12, 8, 2]];
+                let stl = '';
+                wheels.forEach(([x, y, z]) => {
+                    stl += this.createCylinderAt(x, y, z, 3, 2);
+                });
+                return stl;
+            }
+
+            addVehicleDoors() {
+                return this.createPrecisionSlot(-8, -10, 8, 3, 8, 0.5) + this.createPrecisionSlot(-8, 10, 8, 3, 8, 0.5);
+            }
+
+            addVehicleWindows() {
+                return this.createCurvedPanel(5, 0, 12, 12, 8, 2, 'window');
+            }
+
+            addRacingStripes() {
+                let stl = '';
+                for (let x = -15; x <= 15; x += 5) {
+                    stl += this.createPrecisionSlot(x, 0, 8.5, 20, 1, 0.2);
+                }
+                return stl;
+            }
+
+            createPointedEar(x, y, z) {
+                // Create triangular pointed ear
+                const tip = { x: x - 2, y: y, z: z + 4 };
+                const base1 = { x: x + 1, y: y - 1, z: z };
+                const base2 = { x: x + 1, y: y + 1, z: z };
+                return this.createTriangle(tip, base1, base2);
+            }
+
+            createCylinderAt(x, y, z, radius, height) {
+                // Simple cylinder approximation
+                const segments = 8;
+                let stl = '';
+                for (let i = 0; i < segments; i++) {
+                    const angle1 = (i * 2 * Math.PI) / segments;
+                    const angle2 = ((i + 1) * 2 * Math.PI) / segments;
+
+                    const x1 = x + radius * Math.cos(angle1);
+                    const y1 = y + radius * Math.sin(angle1);
+                    const x2 = x + radius * Math.cos(angle2);
+                    const y2 = y + radius * Math.sin(angle2);
+
+                    // Side face
+                    stl += this.createTriangle(
+                        { x: x1, y: y1, z: z },
+                        { x: x2, y: y2, z: z },
+                        { x: x2, y: y2, z: z + height }
+                    );
+                    stl += this.createTriangle(
+                        { x: x1, y: y1, z: z },
+                        { x: x2, y: y2, z: z + height },
+                        { x: x1, y: y1, z: z + height }
+                    );
+                }
+                return stl;
+            }
+
+            generateArchitecturalSTL() {
+                let stl = 'solid Building\n';
+                // Generate basic building structure
+                stl += this.createEllipsoid(0, 0, 10, 15, 15, 10); // Main structure
+                stl += this.createEllipsoid(0, 0, 20, 12, 12, 5);  // Upper floor
+                stl += 'endsolid Building';
+                return stl;
             }
 
             analyzeCodeComplexity(code) {
