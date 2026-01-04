@@ -843,21 +843,65 @@
 
                 console.log('Extracted variables:', variables);
 
-                // Function to resolve variable values
+                // Function to resolve variable values and simple expressions
                 const resolveValue = (value) => {
-                    if (typeof value === 'string' && variables[value] !== undefined) {
+                    if (typeof value !== 'string') {
+                        return parseFloat(value) || 0;
+                    }
+
+                    value = value.trim();
+
+                    // Direct variable lookup
+                    if (variables[value] !== undefined) {
                         return variables[value];
                     }
-                    return parseFloat(value) || value;
+
+                    // Handle simple expressions like "height * 0.8"
+                    const exprMatch = value.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*\*\s*([0-9.]+)/);
+                    if (exprMatch) {
+                        const varName = exprMatch[1];
+                        const multiplier = parseFloat(exprMatch[2]);
+                        if (variables[varName] !== undefined) {
+                            return variables[varName] * multiplier;
+                        }
+                    }
+
+                    // Handle division like "height / 2"
+                    const divMatch = value.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*\/\s*([0-9.]+)/);
+                    if (divMatch) {
+                        const varName = divMatch[1];
+                        const divisor = parseFloat(divMatch[2]);
+                        if (variables[varName] !== undefined && divisor !== 0) {
+                            return variables[varName] / divisor;
+                        }
+                    }
+
+                    // Fallback to parsing as number
+                    const num = parseFloat(value);
+                    return isNaN(num) ? 0 : num;
                 };
 
                 for (let line of lines) {
                     line = line.trim();
 
-                    // Parse sphere with variable support
-                    const sphereMatch = line.match(/sphere\s*\(\s*(?:r\s*=\s*)?([a-zA-Z0-9_.]+)/);
+                    // Parse sphere with variable support (r= or d= syntax)
+                    const sphereMatch = line.match(/sphere\s*\(\s*(?:(?:r\s*=\s*([a-zA-Z0-9_./*\s]+))|(?:d\s*=\s*([a-zA-Z0-9_./*\s]+)))/);
                     if (sphereMatch) {
-                        const radius = resolveValue(sphereMatch[1]);
+                        let radius;
+                        if (sphereMatch[1]) {
+                            // r= syntax
+                            radius = resolveValue(sphereMatch[1].trim());
+                        } else if (sphereMatch[2]) {
+                            // d= syntax (diameter), so divide by 2
+                            const diameter = resolveValue(sphereMatch[2].trim());
+                            radius = diameter / 2;
+                        }
+
+                        // Ensure radius is a valid number
+                        if (isNaN(radius) || radius <= 0) {
+                            radius = 10; // fallback
+                        }
+
                         shapes.push({
                             type: 'sphere',
                             radius: radius
@@ -866,11 +910,32 @@
                         continue;
                     }
 
-                    // Parse cylinder with variable support
-                    const cylinderMatch = line.match(/cylinder\s*\(\s*(?:h\s*=\s*)?([a-zA-Z0-9_.]+)(?:\s*,\s*(?:r\s*=\s*)?([a-zA-Z0-9_.]+))?/);
+                    // Parse cylinder with variable support (d= or r= syntax)
+                    const cylinderMatch = line.match(/cylinder\s*\(\s*(?:(?:h\s*=\s*([a-zA-Z0-9_./*\s]+))|(?:d\s*=\s*([a-zA-Z0-9_./*\s]+)))/);
                     if (cylinderMatch) {
-                        const height = resolveValue(cylinderMatch[1]);
-                        const radius = cylinderMatch[2] ? resolveValue(cylinderMatch[2]) : 5;
+                        let height = 10; // default
+                        let radius = 5; // default
+
+                        // Look for height
+                        const heightMatch = line.match(/h\s*=\s*([a-zA-Z0-9_./*\s]+)/);
+                        if (heightMatch) {
+                            height = resolveValue(heightMatch[1].trim());
+                            if (isNaN(height) || height <= 0) height = 10;
+                        }
+
+                        // Look for radius or diameter
+                        const radiusMatch = line.match(/r\s*=\s*([a-zA-Z0-9_./*\s]+)/);
+                        const diameterMatch = line.match(/d\s*=\s*([a-zA-Z0-9_./*\s]+)/);
+
+                        if (radiusMatch) {
+                            radius = resolveValue(radiusMatch[1].trim());
+                        } else if (diameterMatch) {
+                            const diameter = resolveValue(diameterMatch[1].trim());
+                            radius = diameter / 2;
+                        }
+
+                        if (isNaN(radius) || radius <= 0) radius = 5;
+
                         shapes.push({
                             type: 'cylinder',
                             height: height,
