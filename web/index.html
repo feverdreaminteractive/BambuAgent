@@ -746,8 +746,7 @@
 
                 resultsSection.classList.remove('hidden');
 
-                // Generate 3D preview
-                this.generate3DPreview(data.openscad_code);
+                // 3D preview disabled
             }
 
             displayFullPipelineResults(data) {
@@ -1658,15 +1657,14 @@
             }
 
             showCodePreview(container, openscadCode) {
-                console.log('Showing code preview as fallback');
+                // Code preview disabled
                 container.innerHTML = `
-                    <div class="absolute inset-0 bg-gray-900 text-green-400 p-4 font-mono text-xs overflow-auto">
-                        <div class="text-white text-sm mb-3 flex items-center">
-                            <span class="text-green-400 mr-2">📄</span>
-                            Generated OpenSCAD Code
-                            <span class="text-gray-500 ml-2 text-xs">(3D preview not available)</span>
+                    <div class="absolute inset-0 bg-gray-900 text-white p-4 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-6xl mb-4">🐲</div>
+                            <div class="text-xl mb-2">Flexi Toy Ready</div>
+                            <div class="text-gray-400">Click "Create 3MF File" to download</div>
                         </div>
-                        <pre class="whitespace-pre-wrap text-green-300 leading-relaxed">${this.syntaxHighlight(openscadCode)}</pre>
                     </div>
                 `;
             }
