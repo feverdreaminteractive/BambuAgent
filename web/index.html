@@ -21,6 +21,9 @@
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/three@0.150.0/examples/js/controls/OrbitControls.js"></script>
 
+    <!-- OpenSCAD.js for true OpenSCAD rendering in browser -->
+    <script src="https://unpkg.com/@steeringwaves/openscad-js@latest/dist/openscad.min.js"></script>
+
     <!-- Custom CSS -->
     <style>
         :root {
@@ -876,20 +879,33 @@
                         if (result.success && result.data) {
                             // Display the TRUE OpenSCAD rendered image
                             container.innerHTML = `
-                                <div class="w-full h-full flex items-center justify-center bg-gray-900">
+                                <div class="w-full h-full flex items-center justify-center bg-gray-900 relative">
                                     <img src="${result.data}"
                                          alt="OpenSCAD Rendered Preview"
                                          class="max-w-full max-h-full object-contain"
                                          style="image-rendering: -webkit-optimize-contrast;">
-                                    <div class="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                                    <div class="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
                                         TRUE OpenSCAD
                                     </div>
+                                    ${result.service ? `
+                                        <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                                            ${result.service}
+                                        </div>
+                                    ` : ''}
+                                    ${result.renderTime ? `
+                                        <div class="absolute bottom-2 left-2 bg-purple-600 text-white text-xs px-2 py-1 rounded">
+                                            ${result.renderTime}
+                                        </div>
+                                    ` : ''}
                                 </div>
                             `;
-                            console.log('TRUE OpenSCAD rendering completed successfully!');
+                            console.log(`TRUE OpenSCAD rendering completed via ${result.service || 'Unknown service'}!`);
 
                         } else {
-                            throw new Error(result.details || 'OpenSCAD rendering failed');
+                            throw new Error(result.details || result.error || 'OpenSCAD rendering failed');
                         }
 
                     } catch (netlifyError) {
