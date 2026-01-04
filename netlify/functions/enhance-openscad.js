@@ -54,8 +54,11 @@ ULTRA-SOPHISTICATION REQUIREMENTS:
 - Generate 50+ spheres and cylinders for smooth organic shapes
 - Use hull() operations between 10+ objects for seamless body transitions
 - Create facial features with precise sphere/cylinder positioning
+- Handle character customization and feature fusion (e.g. "Snoopy with Mickey ears")
+- Position additional features with mathematical precision using translate() and rotate()
 - Add clothing details with complex extrusions and boolean operations
 - Include fine surface textures using minkowski() with small spheres
+- Create character variations by combining multiple iconic design elements
 
 🚗 MECHANICAL SOPHISTICATION (for automotive/technical):
 - Generate 100+ geometric components for complex assemblies
@@ -81,8 +84,14 @@ ULTRA-SOPHISTICATION REQUIREMENTS:
 
 EXAMPLE COMPLEXITY TARGETS:
 - Character model: 100+ spheres/cylinders for smooth organic form
+- Character fusion (e.g. "Snoopy with Mickey ears"): Base character + precisely positioned additional features
 - Automotive part: 200+ geometric operations with curved panels
 - Mechanical assembly: 150+ precision components with threaded features
+
+SPECIFIC CHARACTER CUSTOMIZATION EXAMPLES:
+- "Snoopy with Mickey Mouse ears": Generate Snoopy's body, then add two large circular ears positioned on head
+- "Batman with cat ears": Create Batman figure, modify cowl with pointed triangular ears
+- "Car with racing stripes": Generate car body, add stripe patterns using for() loops and linear_extrude()
 
 GENERATE: Ultra-sophisticated OpenSCAD code (200+ lines) with MakerWorld-level complexity and thousands of final triangles.`;
 
