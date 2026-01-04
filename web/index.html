@@ -1004,8 +1004,8 @@
                                       code.includes('intersection(');
 
                 if (hasAdvancedOps) {
-                    console.log('Complex OpenSCAD detected - creating sophisticated preview...');
-                    return this.parseComplexOpenSCAD(code, variables);
+                    console.log('Complex OpenSCAD detected - using advanced parser...');
+                    return this.parseAdvancedOpenSCAD(code, variables);
                 }
 
                 console.log('Found variables:', variables);
@@ -1247,6 +1247,355 @@
                 return shapes;
             }
 
+            parseAdvancedOpenSCAD(code, variables) {
+                console.log('Starting advanced OpenSCAD parsing...');
+
+                // Clean and preprocess the code
+                let cleanCode = code.replace(/\/\/.*$/gm, '') // Remove comments
+                                   .replace(/\s+/g, ' ')      // Normalize whitespace
+                                   .trim();
+
+                // Extract and execute modules first
+                const modules = this.extractOpenSCADModules(cleanCode);
+                console.log('Found modules:', Object.keys(modules));
+
+                // Get the main execution code (after module definitions)
+                const mainCode = this.getMainCode(cleanCode);
+                console.log('Main code to execute:', mainCode.substring(0, 100) + '...');
+
+                // Parse and execute the main code
+                const shapes = this.executeOpenSCADCode(mainCode, modules, variables);
+
+                console.log(`Advanced parser generated ${shapes.length} accurate shapes`);
+                return shapes;
+            }
+
+            extractOpenSCADModules(code) {
+                const modules = {};
+                const modulePattern = /module\s+(\w+)\s*\([^)]*\)\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g;
+                let match;
+
+                while ((match = modulePattern.exec(code)) !== null) {
+                    const [fullMatch, name, body] = match;
+                    modules[name] = this.normalizeModuleBody(body);
+                    console.log(`Extracted module '${name}': ${body.substring(0, 50)}...`);
+                }
+
+                return modules;
+            }
+
+            normalizeModuleBody(body) {
+                // Clean up the module body and prepare for execution
+                return body.trim()
+                          .replace(/^\s*{\s*/, '')  // Remove opening brace
+                          .replace(/\s*}\s*$/, ''); // Remove closing brace
+            }
+
+            getMainCode(code) {
+                // Remove all module definitions and get what's left
+                let mainCode = code.replace(/module\s+\w+\s*\([^)]*\)\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, '');
+                return mainCode.trim();
+            }
+
+            executeOpenSCADCode(code, modules, variables) {
+                const shapes = [];
+
+                // Tokenize the code into statements
+                const statements = this.tokenizeOpenSCADCode(code);
+                console.log(`Processing ${statements.length} statements`);
+
+                for (const statement of statements) {
+                    const parsedShapes = this.parseOpenSCADStatement(statement, modules, variables);
+                    shapes.push(...parsedShapes);
+                }
+
+                return shapes;
+            }
+
+            tokenizeOpenSCADCode(code) {
+                const statements = [];
+                let current = '';
+                let braceLevel = 0;
+                let parenLevel = 0;
+
+                for (let i = 0; i < code.length; i++) {
+                    const char = code[i];
+                    current += char;
+
+                    if (char === '(') parenLevel++;
+                    if (char === ')') parenLevel--;
+                    if (char === '{') braceLevel++;
+                    if (char === '}') braceLevel--;
+
+                    // End of statement
+                    if ((char === ';' || char === '}') && braceLevel === 0 && parenLevel === 0) {
+                        const trimmed = current.trim();
+                        if (trimmed && trimmed !== ';' && trimmed !== '}') {
+                            statements.push(trimmed);
+                        }
+                        current = '';
+                    }
+                }
+
+                if (current.trim()) {
+                    statements.push(current.trim());
+                }
+
+                return statements;
+            }
+
+            parseOpenSCADStatement(statement, modules, variables) {
+                const shapes = [];
+
+                console.log('Parsing statement:', statement.substring(0, 50) + '...');
+
+                // Handle transformations
+                if (statement.includes('translate(')) {
+                    return this.parseTransformStatement(statement, 'translate', modules, variables);
+                } else if (statement.includes('rotate(')) {
+                    return this.parseTransformStatement(statement, 'rotate', modules, variables);
+                } else if (statement.includes('scale(')) {
+                    return this.parseTransformStatement(statement, 'scale', modules, variables);
+                }
+
+                // Handle boolean operations
+                if (statement.includes('difference')) {
+                    return this.parseBooleanOperation(statement, 'difference', modules, variables);
+                } else if (statement.includes('union')) {
+                    return this.parseBooleanOperation(statement, 'union', modules, variables);
+                } else if (statement.includes('intersection')) {
+                    return this.parseBooleanOperation(statement, 'intersection', modules, variables);
+                } else if (statement.includes('hull')) {
+                    return this.parseBooleanOperation(statement, 'hull', modules, variables);
+                }
+
+                // Handle loops
+                if (statement.includes('for(')) {
+                    return this.parseForStatement(statement, modules, variables);
+                }
+
+                // Handle basic shapes
+                if (statement.includes('cube(')) {
+                    shapes.push(this.parseCube(statement, variables));
+                } else if (statement.includes('sphere(')) {
+                    shapes.push(this.parseSphere(statement, variables));
+                } else if (statement.includes('cylinder(')) {
+                    shapes.push(this.parseCylinder(statement, variables));
+                } else if (statement.includes('linear_extrude(')) {
+                    shapes.push(...this.parseLinearExtrude(statement, modules, variables));
+                }
+
+                // Handle module calls
+                for (const [moduleName, moduleBody] of Object.entries(modules)) {
+                    if (statement.includes(`${moduleName}(`)) {
+                        const moduleShapes = this.executeOpenSCADCode(moduleBody, modules, variables);
+                        shapes.push(...moduleShapes);
+                        break;
+                    }
+                }
+
+                return shapes.filter(shape => shape !== null && shape !== undefined);
+            }
+
+            parseTransformStatement(statement, transform, modules, variables) {
+                // Extract transform parameters
+                const pattern = new RegExp(`${transform}\\s*\\(([^)]+)\\)\\s*(.+)`);
+                const match = statement.match(pattern);
+
+                if (!match) return [];
+
+                const [, paramStr, childCode] = match;
+                const params = this.parseParameters(paramStr, variables);
+
+                // Parse the child elements
+                const childShapes = this.parseOpenSCADStatement(childCode, modules, variables);
+
+                // Apply transformation to each child
+                childShapes.forEach(shape => {
+                    if (!shape) return;
+
+                    if (transform === 'translate') {
+                        const [x = 0, y = 0, z = 0] = params;
+                        if (!shape.position) shape.position = [0, 0, 0];
+                        shape.position[0] += x;
+                        shape.position[1] += y;
+                        shape.position[2] += z;
+                    } else if (transform === 'rotate') {
+                        const [rx = 0, ry = 0, rz = 0] = params;
+                        if (!shape.rotation) shape.rotation = [0, 0, 0];
+                        shape.rotation[0] += (rx * Math.PI) / 180;
+                        shape.rotation[1] += (ry * Math.PI) / 180;
+                        shape.rotation[2] += (rz * Math.PI) / 180;
+                    } else if (transform === 'scale') {
+                        const [sx = 1, sy = sx, sz = sx] = params;
+                        if (shape.type === 'cube' && shape.size) {
+                            shape.size[0] *= sx;
+                            shape.size[1] *= sy;
+                            shape.size[2] *= sz;
+                        } else if (shape.radius) {
+                            shape.radius *= sx;
+                            if (shape.height) shape.height *= sz;
+                        }
+                    }
+                });
+
+                return childShapes;
+            }
+
+            parseParameters(paramStr, variables) {
+                if (!paramStr) return [];
+
+                // Handle array syntax [x, y, z]
+                if (paramStr.includes('[') && paramStr.includes(']')) {
+                    const arrayMatch = paramStr.match(/\[([^\]]+)\]/);
+                    if (arrayMatch) {
+                        return arrayMatch[1].split(',').map(v => this.resolveVariableValue(v.trim(), variables));
+                    }
+                }
+
+                // Handle single value
+                return [this.resolveVariableValue(paramStr.trim(), variables)];
+            }
+
+            parseCube(statement, variables) {
+                const pattern = /cube\s*\(([^)]+)\)/;
+                const match = statement.match(pattern);
+
+                if (!match) return null;
+
+                const params = this.parseParameters(match[1], variables);
+                const size = Array.isArray(params) ? params : [params[0] || 10, params[0] || 10, params[0] || 10];
+
+                return {
+                    type: 'cube',
+                    size: size.length === 3 ? size : [size[0], size[0], size[0]],
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    color: 0x4a90e2,
+                    opacity: 0.8
+                };
+            }
+
+            parseSphere(statement, variables) {
+                const pattern = /sphere\s*\(([^)]+)\)/;
+                const match = statement.match(pattern);
+
+                if (!match) return null;
+
+                const params = this.parseParameters(match[1], variables);
+                const radius = params[0] || 10;
+
+                return {
+                    type: 'sphere',
+                    radius: radius,
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    color: 0x4a90e2,
+                    opacity: 0.8
+                };
+            }
+
+            parseCylinder(statement, variables) {
+                const pattern = /cylinder\s*\(([^)]+)\)/;
+                const match = statement.match(pattern);
+
+                if (!match) return null;
+
+                const paramStr = match[1];
+                let height = 20, radius = 10;
+
+                // Parse named parameters
+                const heightMatch = paramStr.match(/h\s*=\s*([^,)]+)/);
+                const radiusMatch = paramStr.match(/r\s*=\s*([^,)]+)/);
+
+                if (heightMatch) {
+                    height = this.resolveVariableValue(heightMatch[1].trim(), variables);
+                }
+                if (radiusMatch) {
+                    radius = this.resolveVariableValue(radiusMatch[1].trim(), variables);
+                } else {
+                    // Try positional parameters
+                    const params = this.parseParameters(paramStr, variables);
+                    if (params.length >= 2) {
+                        height = params[0];
+                        radius = params[1];
+                    } else if (params.length === 1) {
+                        radius = params[0];
+                    }
+                }
+
+                return {
+                    type: 'cylinder',
+                    radius: radius,
+                    height: height,
+                    position: [0, 0, 0],
+                    rotation: [0, 0, 0],
+                    color: 0x4a90e2,
+                    opacity: 0.8
+                };
+            }
+
+            parseForStatement(statement, modules, variables) {
+                const shapes = [];
+
+                const forPattern = /for\s*\(\s*(\w+)\s*=\s*\[([^\]]+)\]\s*\)\s*(.+)/;
+                const match = statement.match(forPattern);
+
+                if (match) {
+                    const [, variable, rangeStr, body] = match;
+                    const range = this.parseRange(rangeStr, variables);
+
+                    for (const value of range) {
+                        const loopVars = { ...variables, [variable]: value };
+                        const bodyShapes = this.parseOpenSCADStatement(body, modules, loopVars);
+                        shapes.push(...bodyShapes);
+                    }
+                }
+
+                return shapes;
+            }
+
+            parseRange(rangeStr, variables) {
+                const values = rangeStr.split(':').map(v => this.resolveVariableValue(v.trim(), variables));
+
+                if (values.length === 1) {
+                    return [values[0]];
+                } else if (values.length === 2) {
+                    // [start:end]
+                    const [start, end] = values;
+                    const result = [];
+                    for (let i = start; i <= end; i++) {
+                        result.push(i);
+                    }
+                    return result;
+                } else if (values.length === 3) {
+                    // [start:step:end]
+                    const [start, step, end] = values;
+                    const result = [];
+                    for (let i = start; i <= end; i += step) {
+                        result.push(i);
+                    }
+                    return result;
+                }
+
+                return [0];
+            }
+
+            resolveVariableValue(valueStr, variables) {
+                if (!valueStr) return 0;
+
+                const trimmed = valueStr.trim();
+
+                // Check if it's a variable reference
+                if (variables[trimmed] !== undefined) {
+                    return variables[trimmed];
+                }
+
+                // Try to parse as number
+                const num = parseFloat(trimmed);
+                return isNaN(num) ? 0 : num;
+            }
+
             resolveValue(valueStr, variables) {
                 if (!valueStr) return 0;
 
@@ -1333,72 +1682,169 @@
                 return `bambu_agent_model_${timestamp}`;
             }
 
-            openWithBambuStudio(openscadCode, filename) {
+            async openWithBambuStudio(openscadCode, filename) {
                 try {
-                    console.log('Opening with Bambu Studio...');
+                    console.log('Preparing for Bambu Studio...');
 
-                    // Create a temporary .scad file and download it
-                    const blob = new Blob([openscadCode], { type: 'text/plain' });
+                    // Show loading state
+                    this.showNotification('Preparing STL for Bambu Studio...', 'info');
+
+                    // Try to generate STL using OpenSCAD rendering
+                    const stlResult = await this.generateSTLForBambuStudio(openscadCode);
+
+                    if (stlResult.success) {
+                        // Download the STL file
+                        this.downloadSTL(stlResult.stlData, `${filename}.stl`);
+                        this.showBambuStudioInstructions(filename, 'stl');
+                    } else {
+                        // Fall back to .scad file with instructions
+                        this.downloadOpenSCAD(openscadCode, `${filename}.scad`);
+                        this.showBambuStudioInstructions(filename, 'scad');
+                    }
+
+                } catch (error) {
+                    console.error('Error preparing for Bambu Studio:', error);
+                    // Fall back to .scad download
+                    this.downloadOpenSCAD(openscadCode, `${filename}.scad`);
+                    this.showBambuStudioInstructions(filename, 'scad');
+                }
+            }
+
+            async generateSTLForBambuStudio(openscadCode) {
+                try {
+                    // Try to generate STL using our render function
+                    const response = await fetch('/.netlify/functions/render-openscad', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            openscadCode: openscadCode,
+                            format: 'stl'
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success && result.data) {
+                        return { success: true, stlData: result.data };
+                    }
+
+                    return { success: false, error: 'STL generation not available' };
+
+                } catch (error) {
+                    console.log('STL generation failed:', error.message);
+                    return { success: false, error: error.message };
+                }
+            }
+
+            downloadSTL(stlData, filename) {
+                try {
+                    // Convert base64 to blob if needed
+                    let blob;
+                    if (typeof stlData === 'string' && stlData.includes('base64')) {
+                        const base64 = stlData.split(',')[1];
+                        const binaryString = atob(base64);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        blob = new Blob([bytes], { type: 'application/octet-stream' });
+                    } else {
+                        blob = new Blob([stlData], { type: 'application/octet-stream' });
+                    }
+
                     const url = URL.createObjectURL(blob);
 
-                    // Create temporary download link
                     const downloadLink = document.createElement('a');
                     downloadLink.href = url;
-                    downloadLink.download = `${filename}.scad`;
+                    downloadLink.download = filename;
                     downloadLink.style.display = 'none';
 
                     document.body.appendChild(downloadLink);
                     downloadLink.click();
                     document.body.removeChild(downloadLink);
 
-                    // Clean up the URL
                     setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-                    // Show instructions for opening with Bambu Studio
-                    this.showBambuStudioInstructions(filename);
+                    this.showNotification('STL file downloaded successfully!', 'success');
 
                 } catch (error) {
-                    console.error('Error opening with Bambu Studio:', error);
-                    this.showNotification('Failed to prepare file for Bambu Studio', 'error');
+                    console.error('STL download failed:', error);
+                    this.showNotification('Failed to download STL', 'error');
                 }
             }
 
-            showBambuStudioInstructions(filename) {
+            showBambuStudioInstructions(filename, fileType = 'scad') {
+                const isSTL = fileType === 'stl';
+                const fileExt = isSTL ? '.stl' : '.scad';
+
                 const modal = document.createElement('div');
                 modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
                 modal.innerHTML = `
                     <div class="bg-gray-800 rounded-lg p-6 max-w-md mx-4 text-white">
                         <div class="flex items-center mb-4">
-                            <div class="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center mr-3">
+                            <div class="w-8 h-8 ${isSTL ? 'bg-green-600' : 'bg-orange-600'} rounded-full flex items-center justify-center mr-3">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${isSTL ? 'M5 13l4 4L19 7' : 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'}"></path>
                                 </svg>
                             </div>
                             <h3 class="text-lg font-semibold">Open with Bambu Studio</h3>
                         </div>
 
                         <div class="space-y-3 text-sm text-gray-300">
-                            <p>Your OpenSCAD file <span class="font-mono text-green-400">${filename}.scad</span> has been downloaded.</p>
+                            ${isSTL ? `
+                                <p>✅ Your STL file <span class="font-mono text-green-400">${filename}${fileExt}</span> has been downloaded and is ready for Bambu Studio!</p>
 
-                            <div class="bg-gray-700 rounded p-3">
-                                <p class="font-semibold mb-2">Next Steps:</p>
-                                <ol class="list-decimal list-inside space-y-1">
-                                    <li>Open Bambu Studio</li>
-                                    <li>File → Import → Import 3D model</li>
-                                    <li>Select the downloaded .scad file</li>
-                                    <li>Bambu Studio will compile it to STL</li>
-                                    <li>Configure print settings and slice</li>
-                                </ol>
-                            </div>
+                                <div class="bg-green-900/20 border border-green-500/30 rounded p-3">
+                                    <p class="font-semibold mb-2 text-green-400">Quick Import:</p>
+                                    <ol class="list-decimal list-inside space-y-1">
+                                        <li>Open Bambu Studio</li>
+                                        <li>Drag & drop the STL file directly into Bambu Studio</li>
+                                        <li>Position and scale the model</li>
+                                        <li>Choose print settings and slice</li>
+                                        <li>Send to your Bambu printer!</li>
+                                    </ol>
+                                </div>
 
-                            <p class="text-xs text-gray-400">
-                                💡 Tip: You can also drag and drop the .scad file directly into Bambu Studio
-                            </p>
+                                <p class="text-xs text-green-400">
+                                    🎉 Ready to print! The model has been compiled from OpenSCAD to STL format.
+                                </p>
+                            ` : `
+                                <p>Your OpenSCAD file <span class="font-mono text-orange-400">${filename}${fileExt}</span> has been downloaded.</p>
+
+                                <div class="bg-yellow-900/20 border border-yellow-500/30 rounded p-3">
+                                    <p class="font-semibold mb-2 text-yellow-400">Import Process:</p>
+                                    <ol class="list-decimal list-inside space-y-1">
+                                        <li>Install <a href="https://openscad.org/downloads.html" target="_blank" class="text-blue-400 underline">OpenSCAD</a> if needed</li>
+                                        <li>Open the .scad file in OpenSCAD</li>
+                                        <li>Render (F6) and export as STL (F7)</li>
+                                        <li>Import the STL into Bambu Studio</li>
+                                        <li>Configure print settings and slice</li>
+                                    </ol>
+                                </div>
+
+                                <p class="text-xs text-orange-400">
+                                    ⚙️ STL conversion needed: Bambu Studio requires STL format for printing.
+                                </p>
+                            `}
                         </div>
 
-                        <div class="flex justify-end mt-6">
+                        <div class="flex justify-between mt-6">
+                            ${isSTL ? `
+                                <button onclick="window.open('https://bambulab.com/en/download/studio', '_blank')"
+                                        class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded text-white font-medium text-sm">
+                                    Download Bambu Studio
+                                </button>
+                            ` : `
+                                <button onclick="window.open('https://openscad.org/downloads.html', '_blank')"
+                                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium text-sm">
+                                    Get OpenSCAD
+                                </button>
+                            `}
+
                             <button onclick="this.parentElement.parentElement.parentElement.remove()"
-                                    class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded text-white font-medium">
+                                    class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded text-white font-medium">
                                 Got it!
                             </button>
                         </div>
