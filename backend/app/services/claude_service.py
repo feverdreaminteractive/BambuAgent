@@ -346,56 +346,72 @@ cube([20, 20, 20], center=true);
             }
 
         try:
-            # Detect best OpenSCAD template
-            template_name, template_data = self.detect_openscad_template(prompt)
+            # No templates - unlimited generation!
 
-            # Also get theme for additional context
-            theme = self.detect_model_theme(prompt)
+            system_prompt = """You are a master 3D designer and OpenSCAD expert. You can create ANY 3D object from description using advanced computational geometry.
 
-            system_prompt = f"""You are an expert OpenSCAD programmer. Generate clean, functional OpenSCAD code based on user prompts using proven design patterns.
+CORE EXPERTISE:
+- Understand real-world proportions, anatomy, and structure of any object
+- Master all OpenSCAD operations: difference(), union(), hull(), intersection()
+- Expert in mathematical transformations: translate(), rotate(), scale(), mirror()
+- Advanced techniques: for loops, conditional logic, modules, parametric design
+- Deep knowledge of organic shapes, mechanical parts, artistic forms, characters, animals
 
-REFERENCE TEMPLATE: {template_name}
-Template Description: {template_data['description']}
+3D MODELING PRINCIPLES:
+1. ANALYZE the object's real-world structure and proportions
+2. BREAK DOWN complex shapes into basic primitives (spheres, cubes, cylinders)
+3. USE boolean operations to combine, subtract, and refine shapes
+4. APPLY transformations to position and orient components correctly
+5. CREATE parametric variables for customization
+6. ENSURE printability (supports, overhangs, wall thickness)
 
-BASE CODE TO REFERENCE AND MODIFY:
-{template_data['code']}
+ADVANCED TECHNIQUES:
+- Use hull() to create smooth connections between shapes
+- Use for loops to create arrays, patterns, or repetitive features
+- Create custom modules for complex reusable components
+- Use intersection() for precise shape cutting
+- Combine multiple primitives with union() for complex forms
+- Use mathematical functions (sin, cos) for organic curves
 
-CUSTOMIZATION INSTRUCTIONS:
-1. Use the reference template above as your foundation
-2. Modify dimensions, features, and structure to match the user's specific request
-3. Keep the proven design patterns (modules, parametric variables, proper structure)
-4. Maintain good 3D printing practices (wall thickness, overhangs, etc.)
-5. Add or modify features while preserving the core template logic
-6. Include clear comments explaining your modifications
-7. Ensure all parameters are adjustable via variables at the top
+PRINTABILITY REQUIREMENTS:
+- Minimum wall thickness: 0.8mm
+- Avoid overhangs >45° without support
+- Maximum size: 200x200x200mm for Bambu A1 mini
+- Consider layer adhesion and print orientation
+- Add base/supports if needed for stability
 
-REQUIREMENTS:
-- Adapt the template code to fulfill the specific user request
-- Maintain parametric design with configurable variables
-- Keep the professional structure and module organization
-- Optimize for FDM 3D printing (no overhangs >45°, min 0.8mm walls)
-- Size appropriately for Bambu A1 mini (256x256x256mm max)
+CREATIVE FREEDOM:
+- You can model ANYTHING: animals, characters, vehicles, tools, art, mechanical parts
+- Think creatively about how to represent complex shapes in OpenSCAD
+- Use advanced boolean operations for detailed features
+- Don't limit yourself - push the boundaries of what's possible
 
-Return your response as:
-1. Brief explanation of how you adapted the {template_name} template
-2. Complete modified OpenSCAD code
-3. Key parameters the user can adjust
-4. Estimated print time"""
+OUTPUT FORMAT:
+1. Brief analysis of the object's structure and modeling approach
+2. Complete OpenSCAD code with extensive comments
+3. Key parameters for customization
+4. Print recommendations (orientation, supports, etc.)"""
 
-            user_prompt = f"""Adapt the {template_name} template to create: {prompt}
+            user_prompt = f"""CREATE THIS 3D MODEL: {prompt}
 
-Customization Request:
-- Base your design on the provided {template_name} template
-- Modify dimensions, features, and details to match my specific needs
-- Keep the parametric structure and proven design patterns
-- Ensure compatibility with Bambu A1 mini 3D printer
+DESIGN CHALLENGE:
+Analyze this object and create detailed OpenSCAD code that accurately represents it. Think about:
+- What does this object actually look like in real life?
+- What are the proportions and key features?
+- How can I break it down into basic 3D shapes?
+- What boolean operations will create the right form?
+- How should it be oriented for 3D printing?
 
-Template to customize: {template_name} ({template_data['description']})
-User's specific request: {prompt}
+CREATIVE REQUIREMENTS:
+- Make it recognizable and accurate to the description
+- Use advanced OpenSCAD techniques for realism
+- Include fine details where appropriate
+- Ensure it's optimized for FDM 3D printing
+- Make key dimensions parametric for customization
 
-Please provide the customized OpenSCAD code with clear parameter explanations."""
+Be creative and push the limits of what's possible in OpenSCAD!"""
 
-            logger.info(f"Using template '{template_name}' for prompt: {prompt}")
+            logger.info(f"Generating unlimited 3D model for prompt: {prompt}")
 
             message = client.messages.create(
                 model="claude-3-haiku-20240307",
@@ -438,9 +454,9 @@ Please provide the customized OpenSCAD code with clear parameter explanations.""
 
             return {
                 "openscadCode": openscad_code.strip(),
-                "explanation": f"[{theme.upper()} THEME] {explanation}",
+                "explanation": explanation,
                 "estimatedPrintTime": estimated_time,
-                "theme": theme
+                "generatedBy": "Unlimited AI 3D Designer"
             }
 
         except Exception as e:
